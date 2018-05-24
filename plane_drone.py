@@ -1,5 +1,3 @@
-import traceback
-
 import numpy as np
 from enum import Enum
 
@@ -20,6 +18,7 @@ class PlaneMode(Enum):
     SUB_MODE_LONGITUDE = 2
     SUB_MODE_LATERAL = 3
     SUB_MODE_STABILIZED = 4
+    SUB_MODE_ASCENDDESCEND = 5
 
 class Udaciplane(Drone):
     """
@@ -97,7 +96,8 @@ class Udaciplane(Drone):
         self.connection.set_sub_mode(PlaneMode.SUB_MODE_STABILIZED.value)
         self.connection.cmd_moment(roll, altitude, sideslip, airspeed)
 
-    def cmd_longitude_mode(self, elevator, throttle, roll = 0, sideslip = 0):
+    def cmd_longitude_mode(self, elevator, throttle, roll = 0, sideslip = 0,
+                           t=0):
         """Command the longitude mode while lateral is stabilized
         
         Args:
@@ -108,7 +108,7 @@ class Udaciplane(Drone):
         """
         
         self.connection.set_sub_mode(PlaneMode.SUB_MODE_LONGITUDE.value)
-        self.connection.cmd_moment(roll, elevator, sideslip, throttle)
+        self.connection.cmd_moment(roll, elevator, sideslip, throttle, t)
         
     def cmd_lateral_mode(self, aileron, rudder, altitude, airspeed):
         """Command the lateral mode while longitudinal mode is stabilized
@@ -125,6 +125,10 @@ class Udaciplane(Drone):
     def cmd_controls(self, aileron, elevator, rudder, throttle):
         self.connection.set_sub_mode(PlaneMode.SUB_MODE_MANUAL.value)
         self.connection.cmd_moment(aileron, elevator, rudder, throttle)
+    
+    def cmd_ascenddescend(self, roll, airspeed, sideslip, throttle):
+        self.connection.set_sub_mode(PlaneMode.SUB_MODE_ASCENDDESCEND.value)
+        self.connection.cmd_moment(roll, airspeed, sideslip, throttle)
 
     def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
         """Command the drone moments.
@@ -140,6 +144,11 @@ class Udaciplane(Drone):
         except Exception as e:
             # traceback.print_exc()
             pass
+        
+        
+        
+        
+    
         
     @property
     def local_position_target(self):
@@ -239,6 +248,19 @@ class Udaciplane(Drone):
         except:
             # traceback.print_exec()
             pass
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     @property
     def threshold_horizontal_error(self):
