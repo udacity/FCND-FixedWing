@@ -8,6 +8,7 @@ class PlaneControl(object):
         
         self.speed_int = 0.0
         self.alt_int = 0.0
+        self.climb_speed_int = 0.0
         
         return
     
@@ -23,7 +24,7 @@ class PlaneControl(object):
             throttle_command: in percent throttle [0,1]
     """
     def airspeed_loop(self, airspeed, airspeed_cmd, 
-                      delta_t = 0.1, throttle_ff = 0.0):        
+                      dt = 0.0, throttle_ff = 0.0):        
         throttle_cmd = 0.0
         # STUDENT CODE HERE
         
@@ -32,7 +33,7 @@ class PlaneControl(object):
         gain_i_speed = 0.1
         max_speed_int = 0.25
         speed_error = (airspeed_cmd-airspeed)
-        self.speed_int = self.speed_int + speed_error*delta_t
+        self.speed_int = self.speed_int + speed_error*dt
         if(gain_i_speed*abs(self.speed_int) > max_speed_int):
             self.speed_int = np.sign(self.speed_int)*max_speed_int/gain_i_speed
         
@@ -93,6 +94,8 @@ class PlaneControl(object):
         
         if(abs(pitch_cmd)>max_pitch_cmd):
             pitch_cmd = np.sign(pitch_cmd)*max_pitch_cmd
+        # END SOLUTION
+        
         return pitch_cmd
     
     """Used to calculate the pitch command required to maintain the commanded
@@ -105,9 +108,25 @@ class PlaneControl(object):
         Returns:
             pitch_cmd: in radians
     """
-    def airspeed_pitch_loop(self, airspeed, airspeed_cmd):
+    def airspeed_pitch_loop(self, airspeed, airspeed_cmd,
+                            dt = 0.0, pitch_ff = 0.0):
         pitch_cmd = 0.0
         # STUDENT CODE HERE
+        
+        # START SOLUTION
+        gain_p_airspeed = 0.2
+        gain_i_airspeed = 0.02
+        max_airspeed_int = 50.0
+        
+        airspeed_error = airspeed_cmd-airspeed
+        self.climb_speed_int = self.climb_speed_int + airspeed_error*dt
+        if(abs(self.climb_speed_int) > max_airspeed_int):
+            self.climb_speed_int = np.sign(self.climb_speed_int)*max_airspeed_int
+        pitch_cmd = -1.0*(gain_p_airspeed*airspeed_error +
+                          gain_i_airspeed*self.climb_speed_int)
+        pitch_cmd = pitch_cmd + pitch_ff
+
+        #
         return pitch_cmd
     
     """Used to calculate the pitch command and throttle command based on the
@@ -123,8 +142,22 @@ class PlaneControl(object):
             pitch_cmd: in radians
             throttle_cmd: in in percent throttle [0,1]
     """
-    def longitudinal_loop(self, airspeed, altitude, airspeed_cmd, altitude_cmd):
+    def longitudinal_loop(self, airspeed, altitude, airspeed_cmd, altitude_cmd,
+                          dt = 0.0):
         pitch_cmd = 0.0
         throttle_cmd = 0.0
         # STUDENT CODE HERE
+        
+        # START SOLUTION
+        max_altitude_diff = 25.0
+        if(altitude_cmd-altitude > max_altitude_diff):
+            throttle_cmd = 1.0
+            pitch_cmd = self.airspeed_pitch_loop(airspeed, airspeed_cmd, dt)
+        elif(altitude - altitude_cmd > max_altitude_diff):
+            throttle_cmd = 0.1
+            pitch_cmd = self.airspeed_pitch_loop(airspeed, airspeed_cmd, dt)
+        else:
+            throttle_cmd = self.airspeed_loop(airspeed, airspeed_cmd, dt)
+            pitch_cmd = self.altitude_loop(altitude, altitude_cmd, dt)
+        # END SOLUTION
         return[pitch_cmd, throttle_cmd]

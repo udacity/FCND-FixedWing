@@ -106,9 +106,9 @@ class Udaciplane(Drone):
             roll: in radians
             sideslip: in radians (positive nose left)
         """
-        
         self.connection.set_sub_mode(PlaneMode.SUB_MODE_LONGITUDE.value)
         self.connection.cmd_moment(roll, elevator, sideslip, throttle, t)
+
         
     def cmd_lateral_mode(self, aileron, rudder, altitude, airspeed):
         """Command the lateral mode while longitudinal mode is stabilized
@@ -121,6 +121,7 @@ class Udaciplane(Drone):
         """
         self.connection.set_sub_mode(PlaneMode.SUB_MODE_LATERAL.value)
         self.connection.cmd_moment(aileron, altitude, rudder, airspeed)
+        
     
     def cmd_controls(self, aileron, elevator, rudder, throttle):
         self.connection.set_sub_mode(PlaneMode.SUB_MODE_MANUAL.value)

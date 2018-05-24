@@ -25,7 +25,7 @@ class FixedWingProject(Udaciplane):
         
         #defined as [along_track_distance (meters), altitude (meters)]
         self.longitudinal_gates = [np.array([200.0, 200.0]),
-                                   np.array([1100.0, 280.0]),
+                                   np.array([1100.0, 300.0]),
                                    np.array([1400.0, 280.0]),
                                    np.array([2200.0, 200.0])]
         self.airspeed_cmd = 41.0
@@ -47,60 +47,49 @@ class FixedWingProject(Udaciplane):
         self.register_callback(MsgID.LOCAL_POSITION,
                                self.local_position_callback)
         self.register_callback(MsgID.LOCAL_VELOCITY, self.airspeed_callback)
-        #self.register_callback(MsgID.STATE, self.state_callback)        
+        self.register_callback(MsgID.STATE, self.state_callback)        
         self.register_callback(MsgID.ATTITUDE, self.attitude_callback)
         #self.register_callback(MsgID.RAW_GYROSCOPE, self.gyro_callback)
         #self.register_callback(MsgID.AIRSPEED, self.airspeed_callback)
         
+    def state_callback(self):
+        if(self.scenario != Scenario.SANDBOX):
+            if(self.guided != True):
+                self.stop()
+
     def airspeed_callback(self):
         #Assuming no wind, for now...
         self.airspeed = np.linalg.norm(self.local_velocity)
-        if(self.scenario == Scenario.AIRSPEED):
-            self.elevator_cmd = 0.0
-            dt = 0.0
-            if(self.last_airspeed_time != None):
-                dt = self.local_velocity_time - self.last_airspeed_time
-                
-            self.last_airspeed_time = self.local_velocity_time
+        dt = 0.0
+        if(self.last_airspeed_time != None):
+            dt = self.local_velocity_time - self.last_airspeed_time
             if(dt <= 0.0):
                 return
-                
-            #print(self.airspeed)
+            
+        self.last_airspeed_time = self.local_velocity_time
+                    
+        if(self.scenario == Scenario.AIRSPEED):                
             self.throttle_cmd = self.controller.airspeed_loop(self.airspeed,
                                                      self.airspeed_cmd, dt,
                                                      0.67)
-            #print('Throttle_Cmd = ', self.throttle_cmd);
-            #Limit the rate at which commands are sent
-            if(self.local_velocity_time-self.time_cmd >= 1.0/self.cmd_freq):
-                self.time_cmd = self.local_velocity_time
-                self.cmd_longitude_mode(self.elevator_cmd, self.throttle_cmd,
-                                        0,0,self.last_airspeed_time)
+            self.cmd_longitude_mode(self.elevator_cmd, self.throttle_cmd,
+                                    0,0,self.last_airspeed_time)
             
         if(self.scenario == Scenario.ALTITUDE):
-            self.elevator_cmd = 0.0
-            dt = 0.0
-            if(self.last_airspeed_time != None):
-                dt = self.local_velocity_time - self.last_airspeed_time
-                
-            self.last_airspeed_time = self.local_velocity_time
-            if(dt <= 0.0):
-                return
-
             self.throttle_cmd = self.controller.airspeed_loop(self.airspeed,
                                                      self.airspeed_cmd, dt,
                                                      0.67)
             
         if(self.scenario == Scenario.CLIMB):
             self.pitch_cmd = self.controller.airspeed_pitch_loop(
-                    self.airspeed, self.airspeed_cmd)
+                    self.airspeed, self.airspeed_cmd, dt)
             
-        if(self.scenario == Scenario.LONGITUDINAL):
+        if(self.scenario == Scenario.LONGITUDINAL):            
             altitude = -self.local_position[2]
-            altitude_cmd = -self.local_position_target[2]
             [self.pitch_cmd, self.throttle_cmd] = \
                 self.controller.longitudinal_loop(self.airspeed, altitude, \
                                                   self.airspeed_cmd, \
-                                                  altitude_cmd)
+                                                  self.altitude_cmd, dt)
     
     def attitude_callback(self):
         if((self.scenario == Scenario.ALTITUDE) |
@@ -112,26 +101,28 @@ class FixedWingProject(Udaciplane):
             self.cmd_longitude_mode(self.elevator_cmd, self.throttle_cmd)
     
     def local_position_callback(self):
-        if(self.scenario == Scenario.ALTITUDE):
-            dt = 0.0
-            if(self.last_position_time != None):
-                dt = self.local_position_time - self.last_position_time
-                
-            self.last_position_time = self.local_position_time
-            if(dt <= 0.0):
-                return
+        dt = 0.0
+        if(self.last_position_time != None):
+            dt = self.local_position_time - self.last_position_time
             
+        self.last_position_time = self.local_position_time
+        if(dt <= 0.0):
+            return
+        
+        if(self.scenario == Scenario.ALTITUDE):            
             altitude = -self.local_position[2]
             self.pitch_cmd = self.controller.altitude_loop(altitude,
                                                            self.altitude_cmd,
                                                            dt)
         if(self.scenario == Scenario.LONGITUDINAL):
             along_track = np.linalg.norm(self.local_position[0:2])
+            print(along_track)
             if(along_track > self.gate_target[0]):
                 if(len(self.longitudinal_gates)==0):
                     self.stop()
                 else:
-                    self.gate_target = self.longitudinal_gates.pop()
+                    self.gate_target = self.longitudinal_gates.pop(0)
+                    print('Gate Target: ', self.gate_target)
                     self.altitude_cmd = self.gate_target[1]     
     
     def run_scenario(self,scenario):
@@ -148,13 +139,14 @@ class FixedWingProject(Udaciplane):
             self.throttle_cmd = 1.0
         elif(scenario == Scenario.LONGITUDINAL):
             self.airspeed_cmd = 41.0
-            self.gate_target = self.longitudinal_gates.pop()
+            self.gate_target = self.longitudinal_gates.pop(0)
             self.altitude_cmd = self.gate_target[1]
         else:
             print('Invalid Scenario')
             return
         
         self.take_control()
+        self.arm();
         self.start()
             
     
@@ -163,7 +155,7 @@ if __name__ == "__main__":
     #conn = WebSocketConnection('ws://127.0.0.1:5760')
     drone = FixedWingProject(conn)
     time.sleep(2)
-    drone.run_scenario(Scenario.ALTITUDE)
+    drone.run_scenario(Scenario.LONGITUDINAL)
                 
             
                 
