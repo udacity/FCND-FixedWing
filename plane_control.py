@@ -24,11 +24,12 @@ class PlaneControl(object):
             throttle_command: in percent throttle [0,1]
     """
     def airspeed_loop(self, airspeed, airspeed_cmd, 
-                      dt = 0.0, throttle_ff = 0.0):        
+                      dt = 0.0):        
         throttle_cmd = 0.0
         # STUDENT CODE HERE
         
         # START SOLUTION
+        throttle_ff = 0.67
         gain_p_speed = 0.2
         gain_i_speed = 0.1
         max_speed_int = 0.25
@@ -125,8 +126,9 @@ class PlaneControl(object):
         pitch_cmd = -1.0*(gain_p_airspeed*airspeed_error +
                           gain_i_airspeed*self.climb_speed_int)
         pitch_cmd = pitch_cmd + pitch_ff
+        #print(gain_i_airspeed*self.climb_speed_int)
 
-        #
+        # END SOLUTION
         return pitch_cmd
     
     """Used to calculate the pitch command and throttle command based on the

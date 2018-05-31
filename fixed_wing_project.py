@@ -70,15 +70,13 @@ class FixedWingProject(Udaciplane):
                     
         if(self.scenario == Scenario.AIRSPEED):                
             self.throttle_cmd = self.controller.airspeed_loop(self.airspeed,
-                                                     self.airspeed_cmd, dt,
-                                                     0.67)
+                                                     self.airspeed_cmd, dt)
             self.cmd_longitude_mode(self.elevator_cmd, self.throttle_cmd,
                                     0,0,self.last_airspeed_time)
             
         if(self.scenario == Scenario.ALTITUDE):
             self.throttle_cmd = self.controller.airspeed_loop(self.airspeed,
-                                                     self.airspeed_cmd, dt,
-                                                     0.67)
+                                                     self.airspeed_cmd, dt)
             
         if(self.scenario == Scenario.CLIMB):
             self.pitch_cmd = self.controller.airspeed_pitch_loop(
@@ -116,7 +114,6 @@ class FixedWingProject(Udaciplane):
                                                            dt)
         if(self.scenario == Scenario.LONGITUDINAL):
             along_track = np.linalg.norm(self.local_position[0:2])
-            print(along_track)
             if(along_track > self.gate_target[0]):
                 if(len(self.longitudinal_gates)==0):
                     self.stop()
@@ -146,7 +143,8 @@ class FixedWingProject(Udaciplane):
             return
         
         self.take_control()
-        self.arm();
+        self.arm()
+        print('Start Scenario...')
         self.start()
             
     
@@ -155,7 +153,7 @@ if __name__ == "__main__":
     #conn = WebSocketConnection('ws://127.0.0.1:5760')
     drone = FixedWingProject(conn)
     time.sleep(2)
-    drone.run_scenario(Scenario.LONGITUDINAL)
+    drone.run_scenario(Scenario.CLIMB)
                 
             
                 
