@@ -6,6 +6,7 @@ For easy navigation throughout this document, here is an outline:
 
  - [Development environment setup](#development-environment-setup)
  - [Simulator walkthrough](#simulator-walkthrough)
+ - [Control the Simulator with Python](#pyton-control)
  - [The Scenarios](#the-scenarios)
  - [Evaluation](#evaluation)
 
@@ -53,7 +54,7 @@ You have direct control over the throttle, ailerons, elevators, and rudder. Use 
 
 TBD
 
-### Scenario Selection
+### Scenario Selection ###
 
 Click the scenario selection menu to see a drop-down list of possible scenarios. When you select a scenario, the aircraft will be reset to a specified starting location and you will be shown a start-up screen. The start-up screen will describe the scenario task and the evaluation criteria. In the start-up screen, you'll have two options to choose from:
 
@@ -61,6 +62,46 @@ Click the scenario selection menu to see a drop-down list of possible scenarios.
 - Run Python code: a screen will appear waiting for Python controller to connect/arm. The screen will disappear and the scenario will start once the vehicle is armed from Python
 
 Most of the scenarios have a time limit associated with them. Upon completion (pass or fail) there will be a window showing your result. From there, you can select another scenario or continue retry the current scenario.
+
+## Python Control ##
+
+The simulation can also be controlled using a Python script and the Udacidrone API. There are three relevant python files found in the FixedWing project repository:
+
+- plane_control.py: this is where you will fill in the control code
+- plane_drone.py: contains PlaneDrone, a sub-class of the Udacidrone drone class with additional commands specific to the fixed wing project
+- fixed_wing_project.py: contains a subclass of PlaneDrone specifically set-up to run the scenarios
+
+### Running a scenario ###
+
+TODO: This needs to be easier to execute for the students possible with a command line argument
+A scenario is run by executing fixed_wing_project.py from the terminal.
+
+~~~
+python fixed_wing_project.py
+~~~
+
+Do not run fixed_wing_project.py until prompted onscreen in the Unity simulation, otherwise the python code will be unable to connect.
+
+To select a different scenario, you need to change the last line of fixed_wing_project.py prior to executing it. For example the following will run the Trim scenario
+
+~~~
+drone.run_scenario(Scenario.TRIM)
+~~~
+
+The following are valid scenario names:
+* Scenario.SANDBOX
+* Scenario.TRIM
+* Scenario.AIRSPEED
+* Scenario.ALTITUDE
+* Scenario.CLIMB
+* Scenario.LONGITUDINAL
+* Scenario.ROLL
+* Scenario.TURN
+* Scenario.YAW
+* Scenario.LINE
+* Scenario.ORBIT
+* Scenario.LATERAL 
+
 
 ## The Scenarios ##
 
@@ -72,7 +113,6 @@ You'll be implementing several Python controllers in the plane_control.py in ord
 The scenarios within a category will build on one another, so you will need to implement and tune them in order. Each category will end in a challenge which will use the control loops you set up in the preceding scenarios.
 
 Prior to completing a scenario, it's suggested that you first use the Unity based controller to tune the gains. If implemented correctly on Python, the Unity controller gains should get close to meeting the objectives of the scenario, although minor tuning may be required.
-
 
 
 ### Longitudinal Scenarios ###
