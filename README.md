@@ -72,16 +72,19 @@ The simulation can also be controlled using a Python script and the Udacidrone A
 - fixed_wing_project.py: contains a subclass of PlaneDrone specifically set-up to run the scenarios
 
 ### Running a scenario ###
-
-TODO: This needs to be easier to execute for the students possible with a command line argument
-A scenario is run by executing fixed_wing_project.py from the terminal.
+To run a scenario from Python:
+1. Select the scenario within the Unity simulation
+2. Select the "Run From Python" button, you should see a "Waiting for Python" message
+3. Change fixed_wing_project.py to execute the same scenario (see below)
+3. Execute fixed_wing_project.py and the scenario should start autonomatically:
 
 ~~~
 python fixed_wing_project.py
 ~~~
 
-Do not run fixed_wing_project.py until prompted onscreen in the Unity simulation, otherwise the python code will be unable to connect.
+If fixed_wing_project.py is run before being prompted onscreen in the Unity simulation, the python code will be unable to connect.
 
+TODO: This needs to be easier to execute for the students possible with a command line argument
 To select a different scenario, you need to change the last line of fixed_wing_project.py prior to executing it. For example the following will run the Trim scenario
 
 ~~~
