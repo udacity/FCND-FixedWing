@@ -72,16 +72,16 @@ class Udaciplane(Drone):
         
         #Visdom visualizer
         self._visdom_connected = False
-        if visdom_available:
-            self._v = visdom.Visdom()
-            if self._v.check_connection():
-                self._visdom_connected = True
-                self._initialize_plots()
-            else:
-                self._visdom_connected = False
-                print('For visual autograder start visdom server: python -m visdom.server')
-        else:
-            print('Visdom library not installed...')
+        #if visdom_available:
+        #    self._v = visdom.Visdom()
+        #    if self._v.check_connection():
+        #        self._visdom_connected = True
+        #        self._initialize_plots()
+        #    else:
+        #        self._visdom_connected = False
+        #        print('For visual autograder start visdom server: python -m visdom.server')
+        #else:
+        #    print('Visdom library not installed...')
 
     def cmd_stabilized(self, roll, altitude, sideslip, airspeed):
         """Command the stabilized mode of the drone
