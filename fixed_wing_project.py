@@ -5,7 +5,7 @@ from enum import Enum
 from udacidrone.connection import MavlinkConnection
 import numpy as np
 from plane_drone import Udaciplane
-from plane_control import PlaneControl
+from plane_control import LongitudinalAutoPilot
 from plane_control import LateralAutoPilot
 from plane_control import euler2RM
 import time
@@ -29,7 +29,7 @@ class FixedWingProject(Udaciplane):
     def __init__(self, connection, tlog_name="TLog.txt"):
         super().__init__(connection, tlog_name)
                 
-        self.controller = PlaneControl()
+        self.longitudinal_autopilot= LongitudinalAutoPilot()
         self.lateral_autopilot = LateralAutoPilot()
         #defined as [along_track_distance (meters), altitude (meters)]
         self.longitudinal_gates = [np.array([200.0, 200.0]),
@@ -47,8 +47,11 @@ class FixedWingProject(Udaciplane):
         self.roll_cmd = 0.0
         self.sideslip_cmd = 0.0
         self.yaw_cmd = 0.0
+        self.roll_ff = 0.0
         self.course_cmd = 0.0
         self.line_origin = np.array([0.0, 0.0, 0.0])
+        self.orbit_center = np.array([0.0, 0.0, 0.0])
+        self.orbit_cw = True
         
         self.scenario = Scenario.SANDBOX
         
@@ -103,27 +106,32 @@ class FixedWingProject(Udaciplane):
             return
         
         if(self.scenario == Scenario.AIRSPEED):                
-            self.throttle_cmd = self.controller.airspeed_loop(self.airspeed,
-                                                     self.airspeed_cmd, dt)
+            self.throttle_cmd = self.longitudinal_autopilot.airspeed_loop(
+                    self.airspeed, self.airspeed_cmd, dt)
             self.cmd_longitude_mode(self.elevator_cmd, self.throttle_cmd,
                                     0,0,self.last_airspeed_time)
             
         if(self.scenario == Scenario.ALTITUDE):
-            self.throttle_cmd = self.controller.airspeed_loop(self.airspeed,
-                                                     self.airspeed_cmd, dt)
+            self.throttle_cmd = self.longitudinal_autopilot.airspeed_loop(
+                    self.airspeed, self.airspeed_cmd, dt)
             
         if(self.scenario == Scenario.CLIMB):
-            self.pitch_cmd = self.controller.airspeed_pitch_loop(
+            self.pitch_cmd = self.longitudinal_autopilot.airspeed_pitch_loop(
                     self.airspeed, self.airspeed_cmd, dt)
             
         if(self.scenario == Scenario.LONGITUDINAL):            
             altitude = -self.local_position[2]
             [self.pitch_cmd, self.throttle_cmd] = \
-                self.controller.longitudinal_loop(self.airspeed, altitude, \
-                                                  self.airspeed_cmd, \
-                                                  self.altitude_cmd, dt)
+                self.longitudinal_autopilot.longitudinal_loop(
+                        self.airspeed, altitude, self.airspeed_cmd, 
+                        self.altitude_cmd, dt)
         
-        if(self.scenario == Scenario.TURN):
+        if((self.scenario == Scenario.ROLL) |
+                (self.scenario == Scenario.TURN) |
+                (self.scenario == Scenario.YAW) |
+                (self.scenario == Scenario.LINE) |
+                (self.scenario == Scenario.ORBIT) |
+                (self.scenario == Scenario.LATERAL)):
             self.rudder_cmd = self.lateral_autopilot.sideslip_hold_loop(
                     self.sideslip, dt)
     
@@ -139,22 +147,24 @@ class FixedWingProject(Udaciplane):
         if((self.scenario == Scenario.ALTITUDE) |
                 (self.scenario == Scenario.CLIMB) |
                 (self.scenario == Scenario.LONGITUDINAL)):
-            self.elevator_cmd = self.controller.pitch_loop(self.attitude[1],
-                                                           self.gyro_raw[1],
-                                                           self.pitch_cmd)
+            self.elevator_cmd = self.longitudinal_autopilot.pitch_loop(
+                    self.attitude[1], self.gyro_raw[1], self.pitch_cmd)
             self.cmd_longitude_mode(self.elevator_cmd, self.throttle_cmd)
         
         if((self.scenario == Scenario.YAW) |
                 (self.scenario == Scenario.LINE) |
-                (self.scenario == Scenario.ORBIT)):
+                (self.scenario == Scenario.ORBIT) |
+                (self.scenario == Scenario.LATERAL)):
             self.roll_cmd = self.lateral_autopilot.yaw_hold_loop(
                     self.yaw_cmd, self.attitude[2], dt)
-        
+            self.roll_cmd = self.roll_cmd + self.roll_ff
+            
         if((self.scenario == Scenario.ROLL) |
                 (self.scenario == Scenario.TURN) |
                 (self.scenario == Scenario.YAW) |
                 (self.scenario == Scenario.LINE) |
-                (self.scenario == Scenario.ORBIT)):
+                (self.scenario == Scenario.ORBIT) |
+                (self.scenario == Scenario.LATERAL)):
             self.aileron_cmd = self.lateral_autopilot.roll_attitude_hold_loop(
                     self.roll_cmd, self.attitude[0], self.gyro_raw[0])
             self.cmd_lateral_mode(self.aileron_cmd, self.rudder_cmd,
@@ -174,9 +184,8 @@ class FixedWingProject(Udaciplane):
         
         if(self.scenario == Scenario.ALTITUDE):            
             altitude = -self.local_position[2]
-            self.pitch_cmd = self.controller.altitude_loop(altitude,
-                                                           self.altitude_cmd,
-                                                           dt)
+            self.pitch_cmd = self.longitudinal_autopilot.altitude_loop(
+                    altitude,self.altitude_cmd, dt)
         if(self.scenario == Scenario.LONGITUDINAL):
             along_track = np.linalg.norm(self.local_position[0:2])
             if(along_track > self.gate_target[0]):
@@ -190,11 +199,18 @@ class FixedWingProject(Udaciplane):
         if(self.scenario == Scenario.LINE):
             self.yaw_cmd = self.lateral_autopilot.straight_line_guidance(
                     self.line_origin, self.line_course, self.local_position)
-        
+            self.roll_ff = 0.0
+            
         if(self.scenario == Scenario.ORBIT):
             self.yaw_cmd = self.lateral_autopilot.orbit_guidance(
                     self.orbit_center, self.orbit_radius, self.local_position,
                     self.attitude[2], self.orbit_cw)
+            self.roll_ff = self.lateral_autopilot.coordinated_turn_ff(
+                    self.airspeed_cmd, self.orbit_radius, self.orbit_cw)
+            
+        if(self.scenario == Scenario.LATERAL):
+            (self.roll_ff, self.yaw_cmd) = self.lateral_autopilot.path_manager(
+                    self.local_position, self.attitude[2], self.airspeed_cmd)
             
     
     def run_scenario(self,scenario):
@@ -228,6 +244,7 @@ class FixedWingProject(Udaciplane):
             self.altitude_cmd = 450.0
             self.yaw_cmd = 0.0;
             self.sideslip_cmd = 0.0
+            self.roll_ff = 0.0
         elif(scenario == Scenario.LINE):
             self.airspeed_cmd = 41.0
             self.altitude_cmd = 450.0
@@ -237,8 +254,11 @@ class FixedWingProject(Udaciplane):
             self.airspeed_cmd = 41.0
             self.altitude_cmd = 450.0
             self.orbit_radius = 500.0
-            self.orbit_center = np.array([0.0, 500.0, 450.0])
+            self.orbit_center = np.array([0.0, 500.0, -450.0])
             self.orbit_cw = True
+        elif(scenario == Scenario.LATERAL):
+            self.airspeed_cmd = 41.0
+            self.altitude_cmd = 450.0
         else:
             print('Invalid Scenario')
             return
@@ -256,4 +276,4 @@ if __name__ == "__main__":
     #conn = WebSocketConnection('ws://127.0.0.1:5760')
     drone = FixedWingProject(conn)
     time.sleep(2)
-    drone.run_scenario(Scenario.LONGITUDINAL)
+    drone.run_scenario(Scenario.LATERAL)

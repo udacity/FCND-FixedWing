@@ -188,7 +188,7 @@ The objective of this scenario is to tune/implement a controller to maintain a c
 
 To complete this scenario:
 
-- The altitude must be within +/-1 meters of the target altitude (450 meters/sec) within 10s
+- The altitude must be within +/-1 meters of the target altitude (450 meters) within 10s
 - The altitude must maintain within those bounds for 5 seconds
 
 This controller should be implemented in plane_control.py, by filling in the following functions:
@@ -321,11 +321,11 @@ Tips:
 
 The lateral/directional scenarios are designed to incrementally implement control loops to command the aircrafts airspeed, pitch, and altitude using the elevator and the throttle. When running these scenarios from Python, a Unity based longitudinal controller will maintain altitude and airspeed.
 
-#### Scenario #6: Coordinated Turn ####
+#### Scenario #6: Stabilized Roll Angle ####
 
 TBD
 
-#### Scenario #7: Stabilized Roll Angle ####
+#### Scenario #7: Coordinated Turn ####
 
 TBD
 
