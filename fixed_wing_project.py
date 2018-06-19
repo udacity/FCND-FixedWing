@@ -13,8 +13,8 @@ import time
 class Scenario(Enum):
     SANDBOX = 0
     TRIM = 1
-    AIRSPEED = 2
-    ALTITUDE = 3
+    ALTITUDE = 2
+    AIRSPEED = 3
     CLIMB = 4
     LONGITUDINAL = 5
     ROLL = 6
@@ -111,9 +111,9 @@ class FixedWingProject(Udaciplane):
             self.cmd_longitude_mode(self.elevator_cmd, self.throttle_cmd,
                                     0,0,self.last_airspeed_time)
             
-        if(self.scenario == Scenario.ALTITUDE):
-            self.throttle_cmd = self.longitudinal_autopilot.airspeed_loop(
-                    self.airspeed, self.airspeed_cmd, dt)
+        #if(self.scenario == Scenario.ALTITUDE):
+        #    self.throttle_cmd = self.longitudinal_autopilot.airspeed_loop(
+        #            self.airspeed, self.airspeed_cmd, dt)
             
         if(self.scenario == Scenario.CLIMB):
             self.pitch_cmd = self.longitudinal_autopilot.airspeed_pitch_loop(
@@ -145,6 +145,7 @@ class FixedWingProject(Udaciplane):
             return
         
         if((self.scenario == Scenario.ALTITUDE) |
+                (self.scenario == Scenario.AIRSPEED) |
                 (self.scenario == Scenario.CLIMB) |
                 (self.scenario == Scenario.LONGITUDINAL)):
             self.elevator_cmd = self.longitudinal_autopilot.pitch_loop(
@@ -216,12 +217,12 @@ class FixedWingProject(Udaciplane):
     def run_scenario(self,scenario):
         self.scenario = scenario
         
-        if(scenario == Scenario.AIRSPEED):
+        if(scenario == Scenario.ALTITUDE):
+            self.throttle_cmd = 0.66
+            self.altitude_cmd = 450.0
+        elif(scenario == Scenario.AIRSPEED):
             self.elevator_cmd = 0.0
             self.airspeed_cmd = 41.0
-        elif(scenario == Scenario.ALTITUDE):
-            self.airspeed_cmd = 41.0
-            self.altitude_cmd = 450.0
         elif(scenario == Scenario.CLIMB):
             self.airspeed_cmd = 41.0
             self.throttle_cmd = 1.0
@@ -276,4 +277,4 @@ if __name__ == "__main__":
     #conn = WebSocketConnection('ws://127.0.0.1:5760')
     drone = FixedWingProject(conn)
     time.sleep(2)
-    drone.run_scenario(Scenario.LATERAL)
+    drone.run_scenario(Scenario.LONGITUDINAL)

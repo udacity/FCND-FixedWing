@@ -142,53 +142,17 @@ Tips:
 - If both the airspeed AND altitude are decreasing, the throttle is probably too low.
 - If the airspeed and altitude are opposite from one another, you'll have to wait for the the phugoid mode to damp out.
 - The phugoid oscillations can be very lightly damped, the damping can be assisted by using the elevator controls.
-- 
-
-#### Scenario #2: Airspeed Hold ####
-
-The objective of this scenario is to tune/implement a controller to maintain a constant airspeed. The controller should be implemented as a PI controller using the throttle setting similar to the control diagram shown above.
-
-To complete this scenario:
-
-- The airspeed must be within +/- 0.5 meters/sec of the target airspeed (41 meters/sec) within 10s
-- The airspeed must maintain the airspeed within those bounds for 5 seconds
-
-This controller should be implemented in plane_control.py, by filling in the following function:
-~~~py
-
-"""Used to calculate the throttle command required command the target 
-    airspeed
-
-	Args:
-		airspeed: in meters/sec
-		airspeed_cmd: in meters/sec
-
-	Returns:
-		throttle_command: in percent throttle [0,1]
-"""
-def airspeed_loop(self, airspeed, airspeed_cmd, dt = 0.0):
-	throttle_cmd = 0.0
-	# STUDENT CODE HERE
-	return throttle_cmd  
-~~~
 
 
 
-Tips:
+#### Scenario #2: Altitude Hold ####
 
-- First, set your throttle feed-forward value determined from the trim analysis
-- Next, increase the proportional gain until you get an acceptable step response (fast but not too many oscillations)
-- Increase the integral gain to increase the rate at which the steady state error is removed
-- If you notice a large contribution from the integral portion of your controller at steady state, adjust your feed-forward throttle setting accordingly. This should allow you to decrease the value of you integral gain (and provide a better dynamic response).
-
-#### Scenario #3: Altitude Hold ####
-
-The objective of this scenario is to tune/implement a controller to maintain a constant altitude using the elevator. The airspeed in this scenario will be controlled using the airspeed controller from the previous scenario. The altitude hold should be implemented using successive loop closure as shown above. The inner loop will be a PD controller on the aircraft pitch. The outer loop will be a PI controller on the aircraft altitude.
+The objective of this scenario is to tune/implement a controller to maintain a constant altitude using the elevator. The throttle will be set to a fixed value. The altitude hold should be implemented using successive loop closure as shown above. The inner loop will be a PD controller on the aircraft pitch. The outer loop will be a PI controller on the aircraft altitude. The integrator must contain anti-windup protection..
 
 
 To complete this scenario:
 
-- The altitude must be within +/-1 meters of the target altitude (450 meters) within 10s
+- The altitude must be within +/-3 meters of the target altitude (450 meters) within 10s
 - The altitude must maintain within those bounds for 5 seconds
 
 This controller should be implemented in plane_control.py, by filling in the following functions:
@@ -234,10 +198,49 @@ Tips:
 - Increase the derivative pitch gain to achieve a nice dynamic response (fast but not too many oscillations)
 - Next, increase the proportional altitude gain until your achieve a nice step response
 - Finally, increase the integral altitude gain to meet the scenario objective threshold.
+ 
+
+#### Scenario #3: Airspeed Hold ####
+
+The objective of this scenario is to tune/implement a controller to maintain a constant airspeed. The altitude will be maintained using the altitude controller from the previous scenario. The controller should be implemented as a PI controller using the throttle setting similar to the control diagram shown above. Implement anti-windup for the integrator. 
+
+To complete this scenario:
+
+- The airspeed must be within +/- 0.5 meters/sec of the target airspeed (41 meters/sec) within 10s
+- The airspeed must maintain the airspeed within those bounds for 5 seconds
+
+This controller should be implemented in plane_control.py, by filling in the following function:
+~~~py
+
+"""Used to calculate the throttle command required command the target 
+    airspeed
+
+	Args:
+		airspeed: in meters/sec
+		airspeed_cmd: in meters/sec
+
+	Returns:
+		throttle_command: in percent throttle [0,1]
+"""
+def airspeed_loop(self, airspeed, airspeed_cmd, dt = 0.0):
+	throttle_cmd = 0.0
+	# STUDENT CODE HERE
+	return throttle_cmd  
+~~~
+
+
+
+Tips:
+
+- First, set your throttle feed-forward value determined from the trim analysis
+- Next, increase the proportional gain until you get an acceptable step response (fast but not too many oscillations)
+- Increase the integral gain to increase the rate at which the steady state error is removed
+- If you notice a large contribution from the integral portion of your controller at steady state, adjust your feed-forward throttle setting accordingly. This should allow you to decrease the value of you integral gain (and provide a better dynamic response).
+
 
 #### Scenario #4: Steady Climb ####
 
-The objective of this scenario is to tune/design a controller to maintain a constant airspeed using the elevator with full throttle. This will put the aircraft in a steady climb. In the previous scenario, the pitch angle was used to control altitude. In this scenario, the pitch angle will be used to control the airspeed.
+The objective of this scenario is to tune/design a controller to maintain a constant airspeed using the elevator with full throttle. This will put the aircraft in a steady climb. In the previous scenario, the pitch angle was used to control altitude. In this scenario, the pitch angle will be used to control the airspeed. Ensure to implement anti-windup for the integrator.
 
 To complete this scenario:
 
@@ -280,7 +283,7 @@ To do this, tune/implement a longitudinal state machine:
  - If the vehicle is within a specified threshold of the target altitude, use the maintain altitude controller.
  - If the vehicle is below or above the target altitude by the specified threshold, use the steady climb/descend controller with full or min throttle (respectively)
 
-To complete the challenge, your altitude must be within +/-2 meters when arriving at the gate.
+To complete the challenge, your altitude must be within +/-3 meters when arriving at the gate.
 The gate locations (x = horizontal distance from the start location):
 
  - Gate #1: x = 200m, altitude=200m

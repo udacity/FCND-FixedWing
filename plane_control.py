@@ -6,43 +6,20 @@ class LongitudinalAutoPilot(object):
         self.max_throttle_rpm = 2500
         self.max_elevator = 30.0*PI/180.0
         
+        self.min_throttle = 0.0
+        self.max_throttle = 1.0
+        self.max_pitch_cmd = 30.0*np.pi/180.0
+        self.max_pitch_cmd2 = 45.0*np.pi/180.0
+        
         self.speed_int = 0.0
         self.alt_int = 0.0
         self.climb_speed_int = 0.0
         
+        
+        
         return
     
     
-    """Used to calculate the throttle command required command the target 
-    airspeed
-        
-        Args:
-            airspeed: in meters/sec
-            airspeed_cmd: in meters/sec
-        
-        Returns:
-            throttle_command: in percent throttle [0,1]
-    """
-    def airspeed_loop(self, airspeed, airspeed_cmd, 
-                      dt = 0.0):        
-        throttle_cmd = 0.0
-        # STUDENT CODE HERE
-        
-        # START SOLUTION
-        throttle_ff = 0.67
-        gain_p_speed = 0.2
-        gain_i_speed = 0.1
-        max_speed_int = 0.25
-        speed_error = (airspeed_cmd-airspeed)
-        self.speed_int = self.speed_int + speed_error*dt
-        if(gain_i_speed*abs(self.speed_int) > max_speed_int):
-            self.speed_int = np.sign(self.speed_int)*max_speed_int/gain_i_speed
-        
-
-        throttle_cmd = gain_p_speed*speed_error + gain_i_speed * self.speed_int
-        throttle_cmd = throttle_cmd + throttle_ff
-        # END SOLUTION
-        return throttle_cmd
     
     """Used to calculate the elevator command required to acheive the target
     pitch
@@ -83,18 +60,21 @@ class LongitudinalAutoPilot(object):
         # START SOLUTION
         gain_p_alt = 0.03
         gain_i_alt = 0.005
-        max_alt_int = 0.1
-        max_pitch_cmd = 30.0*np.pi/180.0
-        
+       
         altitude_error = altitude_cmd-altitude
         self.alt_int = self.alt_int + altitude_error*dt
-        if(abs(self.alt_int) > max_alt_int):
-            self.alt_int = np.sign(self.alt_int)*max_alt_int
+
             
-        pitch_cmd = gain_p_alt*altitude_error + gain_i_alt*self.alt_int
+        pitch_cmd_unsat = gain_p_alt*altitude_error + gain_i_alt*self.alt_int
         
-        if(abs(pitch_cmd)>max_pitch_cmd):
-            pitch_cmd = np.sign(pitch_cmd)*max_pitch_cmd
+        if(abs(pitch_cmd_unsat)>self.max_pitch_cmd):
+            pitch_cmd = np.sign(pitch_cmd_unsat)*self.max_pitch_cmd
+        else:
+            pitch_cmd = pitch_cmd_unsat
+        
+        # Integrator anti-windup
+        if(gain_i_alt != 0):
+            self.alt_int = self.alt_int + dt/gain_i_alt*(pitch_cmd-pitch_cmd_unsat)
         # END SOLUTION
         
         return pitch_cmd
@@ -109,24 +89,65 @@ class LongitudinalAutoPilot(object):
         Returns:
             pitch_cmd: in radians
     """
+    """Used to calculate the throttle command required command the target 
+    airspeed
+        
+        Args:
+            airspeed: in meters/sec
+            airspeed_cmd: in meters/sec
+        
+        Returns:
+            throttle_command: in percent throttle [0,1]
+    """
+    def airspeed_loop(self, airspeed, airspeed_cmd, 
+                      dt = 0.0):        
+        throttle_cmd = 0.0
+        # STUDENT CODE HERE
+        
+        # START SOLUTION
+        throttle_ff = 0.67
+        gain_p_speed = 0.2
+        gain_i_speed = 0.1
+        speed_error = (airspeed_cmd-airspeed)
+        self.speed_int = self.speed_int + speed_error*dt
+        
+        throttle_cmd_unsat = gain_p_speed*speed_error + gain_i_speed * self.speed_int + throttle_ff
+        
+        #Anti windup        
+        if(throttle_cmd_unsat > self.max_throttle):
+            throttle_cmd = self.max_throttle
+        elif(throttle_cmd_unsat < self.min_throttle):
+            throttle_cmd = self.min_throttle
+        else:
+            throttle_cmd = throttle_cmd_unsat
+        
+        if(gain_i_speed != 0):
+            self.speed_int = self.speed_int + dt/gain_i_speed*(throttle_cmd-throttle_cmd_unsat)                
+        # END SOLUTION
+        return throttle_cmd
+
     def airspeed_pitch_loop(self, airspeed, airspeed_cmd,
                             dt = 0.0, pitch_ff = 0.0):
         pitch_cmd = 0.0
         # STUDENT CODE HERE
         
         # START SOLUTION
-        gain_p_airspeed = 0.2
-        gain_i_airspeed = 0.02
-        max_airspeed_int = 50.0
+        gain_p_airspeed = -0.2
+        gain_i_airspeed = -0.1
         
         airspeed_error = airspeed_cmd-airspeed
         self.climb_speed_int = self.climb_speed_int + airspeed_error*dt
-        if(abs(self.climb_speed_int) > max_airspeed_int):
-            self.climb_speed_int = np.sign(self.climb_speed_int)*max_airspeed_int
-        pitch_cmd = -1.0*(gain_p_airspeed*airspeed_error +
-                          gain_i_airspeed*self.climb_speed_int)
-        pitch_cmd = pitch_cmd + pitch_ff
-        #print(gain_i_airspeed*self.climb_speed_int)
+       
+        pitch_cmd_unsat = gain_p_airspeed*airspeed_error + gain_i_airspeed*self.climb_speed_int + pitch_ff
+
+        if(np.abs(pitch_cmd_unsat) > self.max_pitch_cmd2):
+            pitch_cmd = np.sign(pitch_cmd_unsat)*self.max_pitch_cmd2
+        else:
+            pitch_cmd = pitch_cmd_unsat
+            
+        # Anti wind-up
+        if(gain_i_airspeed != 0):
+            self.climb_speed_int = self.climb_speed_int + dt/gain_i_airspeed*(pitch_cmd - pitch_cmd_unsat)
 
         # END SOLUTION
         return pitch_cmd
@@ -359,3 +380,27 @@ class LateralAutoPilot:
 
 
 
+def euler2RM(roll,pitch,yaw):
+    R = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
+    cr = np.cos(roll)
+    sr = np.sin(roll)
+    
+    cp = np.cos(pitch)
+    sp = np.sin(pitch)
+    
+    cy = np.cos(yaw)
+    sy = np.sin(yaw)
+    
+    R[0,0] = cp*cy
+    R[1,0] = -cr*sy+sr*sp*cy
+    R[2,0] = sr*sy+cr*sp*cy
+    
+    R[0,1] = cp*sy
+    R[1,1] = cr*cy+sr*sp*sy
+    R[2,1] = -sr*cy+cr*sp*sy
+    
+    R[0,2] = -sp
+    R[1,2] = sr*cp
+    R[2,2] = cr*cp
+    
+    return R.transpose()
