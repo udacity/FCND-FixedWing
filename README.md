@@ -147,7 +147,7 @@ Tips:
 
 #### Scenario #2: Altitude Hold ####
 
-![altitude](altitude_hold.png)
+![altitude](Diagrams/altitude_hold.png)
 
 The objective of this scenario is to tune/implement a controller to maintain a constant altitude using the elevator. The throttle will be set to a fixed value. The altitude hold should be implemented using successive loop closure as shown above. The inner loop will be a PD controller on the aircraft pitch. The outer loop will be a PI controller on the aircraft altitude. Ensure to implement anti-windup for the integrator.
 
@@ -204,7 +204,7 @@ Tips:
 
 #### Scenario #3: Airspeed Hold ####
 
-![airspeed_hold](airspeed_hold.png)
+![airspeed_hold](Diagrams/airspeed_hold.png)
 
 The objective of this scenario is to tune/implement a controller to maintain a constant airspeed. The altitude will be maintained using the altitude controller from the previous scenario. The controller should be implemented as a PI controller using the throttle setting. Ensure to implement anti-windup for the integrator.
 
@@ -244,7 +244,7 @@ Tips:
 
 #### Scenario #4: Steady Climb ####
 
-![climb](airspeed_pitch_hold.png)
+![climb](Diagrams/airspeed_pitch_hold.png)
 
 The objective of this scenario is to tune/design a controller to maintain a constant airspeed using the elevator with full throttle and a PI controller as shown above. This will put the aircraft in a steady climb. In the previous scenario, the pitch angle was used to control altitude. In this scenario, the pitch angle will be used to control the airspeed. Ensure to implement anti-windup for the integrator.
 
