@@ -22,7 +22,7 @@ If you've previously installed Udacidrone, ensure that you are working with vers
 
 ### Unity Simulation ###
 
-Finally, download the version of the simulator that's appropriate for your operating system [from this repository](https://github.com/udacity/FCND-FixedWing/releases).
+Finally, download the version of the simulator that's appropriate for your operating system [from this repository](https://github.com/udacity/FCND-FixedWing/releases). (v0.1.2 or higher for longitudinal scenarios)
 
 ## Simulator Walkthrough ##
 
@@ -147,7 +147,9 @@ Tips:
 
 #### Scenario #2: Altitude Hold ####
 
-The objective of this scenario is to tune/implement a controller to maintain a constant altitude using the elevator. The throttle will be set to a fixed value. The altitude hold should be implemented using successive loop closure. The inner loop will be a PD controller on the aircraft pitch. The outer loop will be a PI controller on the aircraft altitude. Ensure to implement anti-windup for the integrator.
+![altitude](altitude_hold.png)
+
+The objective of this scenario is to tune/implement a controller to maintain a constant altitude using the elevator. The throttle will be set to a fixed value. The altitude hold should be implemented using successive loop closure as shown above. The inner loop will be a PD controller on the aircraft pitch. The outer loop will be a PI controller on the aircraft altitude. Ensure to implement anti-windup for the integrator.
 
 
 To complete this scenario:
@@ -202,6 +204,8 @@ Tips:
 
 #### Scenario #3: Airspeed Hold ####
 
+![airspeed_hold](airspeed_hold.png)
+
 The objective of this scenario is to tune/implement a controller to maintain a constant airspeed. The altitude will be maintained using the altitude controller from the previous scenario. The controller should be implemented as a PI controller using the throttle setting. Ensure to implement anti-windup for the integrator.
 
 To complete this scenario:
@@ -240,7 +244,9 @@ Tips:
 
 #### Scenario #4: Steady Climb ####
 
-The objective of this scenario is to tune/design a controller to maintain a constant airspeed using the elevator with full throttle. This will put the aircraft in a steady climb. In the previous scenario, the pitch angle was used to control altitude. In this scenario, the pitch angle will be used to control the airspeed. Ensure to implement anti-windup for the integrator.
+![climb](airspeed_pitch_hold.png)
+
+The objective of this scenario is to tune/design a controller to maintain a constant airspeed using the elevator with full throttle and a PI controller as shown above. This will put the aircraft in a steady climb. In the previous scenario, the pitch angle was used to control altitude. In this scenario, the pitch angle will be used to control the airspeed. Ensure to implement anti-windup for the integrator.
 
 To complete this scenario:
 
@@ -354,15 +360,15 @@ TBD
 
 ## Evaluation ##
 
-The longitudinal, lateral/directional, and full 3D challenges will be evaluated for successful completion of the objectives.
+The longitudinal, lateral/directional, and full 3D challenges will be evaluated for successful completion of the objectives. Success completion of the controller
 
 ### Inconsistent Results ###
 
-The scenarios/challenges are evaluated within Unity using the true aircraft position. Due to asynchronous communication between the Python controller and Unity, successive runs of the same scenario with the same controller may yield different results depending on the machine speed of your machine and/or other processes running on it.
+The scenarios/challenges are evaluated within Unity using the true aircraft position. Due to asynchronous communication between the Python controller and Unity, successive runs of the same scenario with the same controller may yield different results depending on the speed of your machine and/or other processes running on it.
 
 If this is the case here are some tips to help get a consistent result:
 
-- Don't stress! Implementing controllers for aircraft in the real world yield different results every time they are tested! If you can get a successful result more than 50% of the time, save the log file from one of the successful runs. Most likely the implementation will be a success when evaluated because it will be run sufficiently fast machines.
+- Don't stress! Implementing controllers for aircraft in the real world yield different results every time they are tested! If you can get a successful result more than 50% of the time, save the log file from one of the successful runs. Most likely the implementation will be a success when evaluated because it will be run on sufficiently fast machines.
 - Tune the gains to not only meet the objectives of the scenarios but also exceed them.
 - Try being less aggressive on your inner loops (smaller gains)
 - Use the simple graphics setting available in the simulation.

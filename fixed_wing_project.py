@@ -111,10 +111,6 @@ class FixedWingProject(Udaciplane):
             self.cmd_longitude_mode(self.elevator_cmd, self.throttle_cmd,
                                     0,0,self.last_airspeed_time)
             
-        #if(self.scenario == Scenario.ALTITUDE):
-        #    self.throttle_cmd = self.longitudinal_autopilot.airspeed_loop(
-        #            self.airspeed, self.airspeed_cmd, dt)
-            
         if(self.scenario == Scenario.CLIMB):
             self.pitch_cmd = self.longitudinal_autopilot.airspeed_pitch_loop(
                     self.airspeed, self.airspeed_cmd, dt)

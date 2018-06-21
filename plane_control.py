@@ -53,7 +53,7 @@ class LongitudinalAutoPilot(object):
         Returns:
             pitch_cmd: in radians
     """
-    def altitude_loop(self, altitude, altitude_cmd, dt = 0.0):
+    def altitude_loop(self, altitude, altitude_cmd, dt):
         pitch_cmd = 0.0
         # STUDENT CODE HERE
         
@@ -79,16 +79,7 @@ class LongitudinalAutoPilot(object):
         
         return pitch_cmd
     
-    """Used to calculate the pitch command required to maintain the commanded
-    airspeed
-    
-        Args:
-            airspeed: in meters/sec
-            airspeed_cmd: in meters/sec
-        
-        Returns:
-            pitch_cmd: in radians
-    """
+
     """Used to calculate the throttle command required command the target 
     airspeed
         
@@ -99,8 +90,7 @@ class LongitudinalAutoPilot(object):
         Returns:
             throttle_command: in percent throttle [0,1]
     """
-    def airspeed_loop(self, airspeed, airspeed_cmd, 
-                      dt = 0.0):        
+    def airspeed_loop(self, airspeed, airspeed_cmd, dt):        
         throttle_cmd = 0.0
         # STUDENT CODE HERE
         
@@ -125,9 +115,17 @@ class LongitudinalAutoPilot(object):
             self.speed_int = self.speed_int + dt/gain_i_speed*(throttle_cmd-throttle_cmd_unsat)                
         # END SOLUTION
         return throttle_cmd
-
-    def airspeed_pitch_loop(self, airspeed, airspeed_cmd,
-                            dt = 0.0, pitch_ff = 0.0):
+    """Used to calculate the pitch command required to maintain the commanded
+    airspeed
+    
+        Args:
+            airspeed: in meters/sec
+            airspeed_cmd: in meters/sec
+        
+        Returns:
+            pitch_cmd: in radians
+    """
+    def airspeed_pitch_loop(self, airspeed, airspeed_cmd, dt):
         pitch_cmd = 0.0
         # STUDENT CODE HERE
         
@@ -138,7 +136,7 @@ class LongitudinalAutoPilot(object):
         airspeed_error = airspeed_cmd-airspeed
         self.climb_speed_int = self.climb_speed_int + airspeed_error*dt
        
-        pitch_cmd_unsat = gain_p_airspeed*airspeed_error + gain_i_airspeed*self.climb_speed_int + pitch_ff
+        pitch_cmd_unsat = gain_p_airspeed*airspeed_error + gain_i_airspeed*self.climb_speed_int
 
         if(np.abs(pitch_cmd_unsat) > self.max_pitch_cmd2):
             pitch_cmd = np.sign(pitch_cmd_unsat)*self.max_pitch_cmd2
@@ -197,7 +195,18 @@ class LateralAutoPilot:
 
 
 
-
+    """Used to calculate the commanded aileron based on the roll error
+    
+        Args:
+            airspeed: in meter/sec
+            altitude: in meters (positive up)
+            airspeed_cmd: in meters/sec
+            altitude_cmd: in meters/sec (positive up)
+            
+        Returns:
+            pitch_cmd: in radians
+            throttle_cmd: in in percent throttle [0,1]
+    """
     def roll_attitude_hold_loop(self,
                                 phi_c,  # commanded roll
                                 phi,    # actual roll 
