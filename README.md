@@ -71,16 +71,16 @@ The gains of the control system used internally on the Unity simulation can be t
 2. Choose the appropriate scenario from the scenario selection menu
 3. Click the "Tune Parameter" button
 
-![tune_param](Diagrams/tuning1.png)
+![tune_param](Diagrams/tuning1.PNG)
 
 4. A list of parameters will appear. Adjust the sliders or the set the fields to the values you'd like for the parameters.
 
-![params](Diagrams/tuning2.png)
+![params](Diagrams/tuning2.PNG)
 
 5. Run the scenario!
 6. If you want to save the parameters to a text file, click the save button on the top right corner. The parameters are saved to a file named gains_new.txt. To use these default values next time the simulation is executed, rename the file to gains.txt
 
-![save](Diagrams/tuning3.png)
+![save](Diagrams/tuning3.PNG)
 
 
 ## Python Control ##
