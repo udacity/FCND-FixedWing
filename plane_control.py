@@ -49,6 +49,7 @@ class LongitudinalAutoPilot(object):
         Args:
             altitude: in meters (positive up)
             altitude_cmd: in meters (positive up)
+            dt: timestep in seconds
         
         Returns:
             pitch_cmd: in radians
@@ -86,6 +87,7 @@ class LongitudinalAutoPilot(object):
         Args:
             airspeed: in meters/sec
             airspeed_cmd: in meters/sec
+            dt: timestep in seconds
         
         Returns:
             throttle_command: in percent throttle [0,1]
@@ -121,6 +123,7 @@ class LongitudinalAutoPilot(object):
         Args:
             airspeed: in meters/sec
             airspeed_cmd: in meters/sec
+            dt: timestep in seconds
         
         Returns:
             pitch_cmd: in radians
@@ -158,13 +161,14 @@ class LongitudinalAutoPilot(object):
             altitude: in meters (positive up)
             airspeed_cmd: in meters/sec
             altitude_cmd: in meters/sec (positive up)
+            dt: timestep in seconds
             
         Returns:
             pitch_cmd: in radians
             throttle_cmd: in in percent throttle [0,1]
     """
     def longitudinal_loop(self, airspeed, altitude, airspeed_cmd, altitude_cmd,
-                          dt = 0.0):
+                          dt):
         pitch_cmd = 0.0
         throttle_cmd = 0.0
         # STUDENT CODE HERE
@@ -198,17 +202,17 @@ class LateralAutoPilot:
     """Used to calculate the commanded aileron based on the roll error
     
         Args:
-            airspeed: in meter/sec
-            altitude: in meters (positive up)
-            airspeed_cmd: in meters/sec
-            altitude_cmd: in meters/sec (positive up)
+            phi_c: commanded roll in radians
+            phi: roll angle in radians
+            roll_rate: in radians/sec
+            T_s: timestep in sec
+            phi_ff: feed-forward roll angle in radians
             
         Returns:
-            pitch_cmd: in radians
-            throttle_cmd: in in percent throttle [0,1]
+            aileron: in percent full aileron [-1,1]
     """
     def roll_attitude_hold_loop(self,
-                                phi_c,  # commanded roll
+                                phi_cmd,  # commanded roll
                                 phi,    # actual roll 
                                 roll_rate, 
                                 T_s = 0.0,
@@ -220,11 +224,21 @@ class LateralAutoPilot:
         # START SOLUION
         gain_p_phi = 40.0
         gain_d_phi = 1.0
-        aileron = gain_p_phi*(phi_c-phi) - gain_d_phi*roll_rate
+        aileron = gain_p_phi*(phi_cmd-phi) - gain_d_phi*roll_rate
         # END SOLUTION
         return aileron
 
-
+    """Used to calculate the commanded roll angle from the course/yaw angle
+    
+        Args:
+            yaw_cmd: commanded yaw in radians
+            yaw: roll angle in radians
+            roll_rate: in radians/sec
+            T_s: timestep in sec
+            
+        Returns:
+            roll_cmd: commanded roll in radians
+    """
     def yaw_hold_loop(self,
                          yaw_cmd,  # desired heading
                          yaw,     # actual heading 
@@ -254,7 +268,15 @@ class LateralAutoPilot:
         return roll_cmd
 
 
-
+    """Used to calculate the commanded rudder based on the sideslip
+    
+        Args:
+            beta: sideslip angle in radians
+            T_s: timestep in sec
+            
+        Returns:
+            rudder: in percent full rudder [-1,1]
+    """
     def sideslip_hold_loop(self,
                            beta, # sideslip angle 
                            T_s):
@@ -269,6 +291,17 @@ class LateralAutoPilot:
         #END SOLUTION
         return rudder
     
+    """Used to calculate the desired course angle based on cross-track error
+    from a desired line
+    
+        Args:
+            line_origin: point on the desired line in meters [N, E, D]
+            line_course: heading of the line in radians
+            local_position: vehicle position in meters [N, E, D]
+            
+        Returns:
+            course_cmd: course/yaw cmd for the vehicle in radians
+    """
     def straight_line_guidance(self, line_origin, line_course, 
                                local_position):
         course_cmd = 0
@@ -283,6 +316,19 @@ class LateralAutoPilot:
         # END SOLUTION
         return course_cmd
     
+    """Used to calculate the desired course angle based on radius error from
+    a specified orbit center
+    
+        Args:
+            orbit_center: in meters [N, E, D]
+            orbit_radius: desired radius in meters
+            local_position: vehicle position in meters [N, E, D]
+            yaw: vehicle heading in radians
+            clockwise: specifies whether to fly clockwise (increasing yaw)
+            
+        Returns:
+            course_cmd: course/yaw cmd for the vehicle in radians
+    """
     def orbit_guidance(self, orbit_center, orbit_radius, local_position, yaw,
                        clockwise = True):
         course_cmd = 0
@@ -308,7 +354,17 @@ class LateralAutoPilot:
         # END SOLUTION
         return course_cmd
 
-    # turn_rate positive is cw, negative is ccw
+    """Used to calculate the feedforward roll angle for a constant radius
+    coordinated turn
+    
+        Args:
+            speed: the aircraft speed during the turn in meters/sec
+            radius: turing radius in meters
+            cw: true=clockwise turn, false = counter-clockwise turn
+            
+        Returns:
+            roll_ff: feed-forward roll in radians
+    """
     def coordinated_turn_ff(self, speed, radius, cw):
         
         roll_ff = 0
@@ -322,6 +378,19 @@ class LateralAutoPilot:
         # END SOLUTION
         return roll_ff
 
+    """Used to calculate the desired course angle and feed-forward roll
+    depending on which phase of lateral flight (orbit or line following) the 
+    aicraft is in
+    
+        Args:
+            local_position: vehicle position in meters [N, E, D]
+            yaw: vehicle heading in radians
+            airspeed_cmd: in meters/sec
+            
+        Returns:
+            roll_ff: feed-forward roll in radians
+            yaw_cmd: commanded yaw/course in radians
+    """
     def path_manager(self, local_position, yaw, airspeed_cmd):
         
         roll_ff = 0

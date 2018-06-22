@@ -63,6 +63,26 @@ Click the scenario selection menu to see a drop-down list of possible scenarios.
 
 Most of the scenarios have a time limit associated with them. Upon completion (pass or fail) there will be a window showing your result. From there, you can select another scenario or continue retry the current scenario.
 
+### Tuning Unity Parameters
+
+The gains of the control system used internally on the Unity simulation can be tuned. The longitudinal and lateral control gains are tuned independently but the control gains within each type build upon each other (i.e. you cannot tune the other loop without first tuning the inner loop gains). To tune the gains:
+
+1. Default gains are loaded from the text file, gains.txt. The file will be located in the same folder as the simulation executable. Set the values prior to running th program.
+2. Choose the appropriate scenario from the scenario selection menu
+3. Click the "Tune Parameter" button
+
+![tune_param](Diagrams/tuning1.png)
+
+4. A list of parameters will appear. Adjust the sliders or the set the fields to the values you'd like for the parameters.
+
+![params](Diagrams/tuning2.png)
+
+5. Run the scenario!
+6. If you want to save the parameters to a text file, click the save button on the top right corner. The parameters are saved to a file named gains_new.txt. To use these default values next time the simulation is executed, rename the file to gains.txt
+
+![save](Diagrams/tuning3.png)
+
+
 ## Python Control ##
 
 The simulation can also be controlled using a Python script and the Udacidrone API. There are three relevant python files found in the FixedWing project repository:
@@ -182,11 +202,12 @@ def pitch_loop(self, pitch, pitch_rate, pitch_cmd):
     Args:
     altitude: in meters (positive up)
     altitude_cmd: in meters (positive up)
+    dt: timestep in seconds
 
 	Returns:
 		pitch_cmd: in radians
 """
-def altitude_loop(self, altitude, altitude_cmd, dt = 0.0):
+def altitude_loop(self, altitude, altitude_cmd, dt):
 	pitch_cmd = 0.0
 	# STUDENT CODE HERE
 	return pitch_cmd
@@ -222,11 +243,12 @@ This controller should be implemented in plane_control.py, by filling in the fol
 	Args:
 		airspeed: in meters/sec
 		airspeed_cmd: in meters/sec
+        dt: timestep in seconds
 
 	Returns:
 		throttle_command: in percent throttle [0,1]
 """
-def airspeed_loop(self, airspeed, airspeed_cmd, dt = 0.0):
+def airspeed_loop(self, airspeed, airspeed_cmd, dt):
 	throttle_cmd = 0.0
 	# STUDENT CODE HERE
 	return throttle_cmd  
@@ -262,12 +284,13 @@ This controller should be implemented in plane_control.py, by filling in the fol
 	Args:
 		airspeed: in meters/sec
 		airspeed_cmd: in meters/sec
+        dt: timestep in seconds
 
 	Returns:
 		pitch_cmd: in radians
 """
 
-def airspeed_pitch_loop(self, airspeed, airspeed_cmd, dt = 0.0, pitch_ff = 0.0):
+def airspeed_pitch_loop(self, airspeed, airspeed_cmd, dt):
 	pitch_cmd = 0.0
 	# STUDENT CODE HERE
 	return pitch_cmd
@@ -309,12 +332,13 @@ This controller should be implemented in plane_control.py, by filling in the fol
 		altitude: in meters (positive up)
 		airspeed_cmd: in meters/sec
 		altitude_cmd: in meters/sec (positive up)
+        dt: timestep in seconds
 
 	Returns:
 		pitch_cmd: in radians
 		throttle_cmd: in in percent throttle [0,1]
 """
-def longitudinal_loop(self, airspeed, altitude, airspeed_cmd, altitude_cmd, dt = 0.0):
+def longitudinal_loop(self, airspeed, altitude, airspeed_cmd, altitude_cmd, dt):
 	pitch_cmd = 0.0
 	throttle_cmd = 0.0
 	# STUDENT CODE HERE
