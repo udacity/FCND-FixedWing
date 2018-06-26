@@ -1,0 +1,17 @@
+Kp_speed:0
+Ki_speed:0
+Kp_pitch:0
+Kp_q:0
+Kp_alt:0
+Ki_alt:0
+Kp_speed2:0
+Ki_speed2:0
+altitudeSwitch:0
+Kp_roll:0
+Kp_p:0
+Kp_yaw:0
+Ki_yaw:0
+Kp_sideslip:0
+Ki_sideslip:0
+Kp_xTrack:0
+Kp_orbit:0
