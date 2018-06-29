@@ -196,17 +196,17 @@ class LateralAutoPilot:
         self.integrator_yaw = 0.0 
         self.integrator_beta = 0.0
         self.gate = 1
+        self.max_roll = 60*np.pi/180.0
 
 
 
     """Used to calculate the commanded aileron based on the roll error
     
         Args:
-            phi_c: commanded roll in radians
+            phi_cmd: commanded roll in radians
             phi: roll angle in radians
             roll_rate: in radians/sec
             T_s: timestep in sec
-            phi_ff: feed-forward roll angle in radians
             
         Returns:
             aileron: in percent full aileron [-1,1]
@@ -215,8 +215,7 @@ class LateralAutoPilot:
                                 phi_cmd,  # commanded roll
                                 phi,    # actual roll 
                                 roll_rate, 
-                                T_s = 0.0,
-                                phi_ff = 0.0):
+                                T_s = 0.0):
         aileron = 0
         # STUDENT CODE HERE
         
@@ -242,15 +241,15 @@ class LateralAutoPilot:
     def yaw_hold_loop(self,
                          yaw_cmd,  # desired heading
                          yaw,     # actual heading 
-                         T_s
-                         ):
+                         T_s,
+                         roll_ff=0):
         roll_cmd = 0
         
         # STUDENT CODE HERE
         
         # START SOLUTION
-        gain_p_yaw = 2.0
-        gain_i_yaw = 0.01
+        gain_p_yaw = 1.6
+        gain_i_yaw = 0.02
         yaw_error = yaw_cmd-yaw
         while(yaw_error < np.pi):
             yaw_error = yaw_error + 2*np.pi
@@ -259,11 +258,21 @@ class LateralAutoPilot:
             yaw_error = yaw_error - 2*np.pi
         self.integrator_yaw = self.integrator_yaw + yaw_error*T_s
         
-        if(self.integrator_yaw > 100):
-            self.integrator_yaw = 100
-        elif(self.integrator_yaw < -100):
-            self.integrator_yaw = -100
-        roll_cmd = gain_p_yaw*yaw_error+gain_i_yaw*self.integrator_yaw
+        
+        roll_cmd_unsat = gain_p_yaw*yaw_error+roll_ff
+        if(np.abs(roll_cmd_unsat) > self.max_roll):
+            roll_cmd_unsat = np.sign(roll_cmd_unsat)*self.max_roll
+        roll_cmd_unsat = roll_cmd_unsat + gain_i_yaw*self.integrator_yaw
+        
+        if(np.abs(roll_cmd_unsat) > self.max_roll):
+            roll_cmd = np.sign(roll_cmd_unsat)*self.max_roll
+        else:
+            roll_cmd = roll_cmd_unsat
+        
+        if(gain_i_yaw != 0):
+            self.integrator_yaw = self.integrator_yaw + (T_s/gain_i_yaw)*(roll_cmd-roll_cmd_unsat)
+        
+        
         # END SOLUTION
         return roll_cmd
 
@@ -284,10 +293,22 @@ class LateralAutoPilot:
         # STUDENT CODE HERE
         
         # START SOLUTION
-        gain_p_beta = 1.0
-        gain_i_beta = 1.0
+        gain_p_beta = -1.0
+        gain_i_beta = -1.0
         self.integrator_beta = self.integrator_beta+(0.0-beta)*T_s
-        rudder = -1.0*(gain_p_beta*(0.0-beta)+gain_i_beta*self.integrator_beta)
+        rudder_unsat = gain_p_beta*(0.0-beta)
+        if(np.abs(rudder_unsat) > 1):
+            rudder_unsat = 1*np.sign(rudder_unsat)
+        
+        rudder_unsat = rudder_unsat + gain_i_beta*self.integrator_beta
+        
+        if(np.abs(rudder_unsat)>1):
+            rudder = 1*np.sign(rudder_unsat)
+        else:
+            rudder = rudder_unsat
+        
+        if(gain_i_beta != 0):
+            self.integrator_beta = self.integrator_beta + (T_s/gain_i_beta)*(rudder-rudder_unsat)
         #END SOLUTION
         return rudder
     
@@ -335,7 +356,7 @@ class LateralAutoPilot:
         # STUDENT CODE HERE
         
         # START SOLUTION
-        gain_orbit = 1.5
+        gain_orbit = 6
         radius = np.linalg.norm(orbit_center[0:2]-local_position[0:2])
         course_cmd = np.pi / 2 + np.arctan(
                 gain_orbit * (radius - orbit_radius) / orbit_radius);
@@ -359,7 +380,7 @@ class LateralAutoPilot:
     
         Args:
             speed: the aircraft speed during the turn in meters/sec
-            radius: turing radius in meters
+            radius: turning radius in meters
             cw: true=clockwise turn, false = counter-clockwise turn
             
         Returns:
@@ -406,12 +427,12 @@ class LateralAutoPilot:
                 self.integrator_yaw = 0.0
             else:
                 roll_ff = 0.0
-                line_origin = np.array([0.0, 50.0, -450.0])
+                line_origin = np.array([0.0, 20.0, -450.0])
                 line_course = 0.0
                 yaw_cmd = self.straight_line_guidance(line_origin, line_course,
                                              local_position)
         if(self.gate == 2):
-            if(local_position[1] < -350):
+            if(local_position[1] < -380):
                 self.gate = self.gate+1
                 print('Gate 2 Complete')
                 print('Yaw Int = ',self.integrator_yaw)
@@ -419,7 +440,7 @@ class LateralAutoPilot:
             else:
                 radius = 400
                 cw = False
-                orbit_center = np.array([500.0, -350.0, -450.0])
+                orbit_center = np.array([500.0, -380.0, -450.0])
                 roll_ff = self.coordinated_turn_ff(airspeed_cmd, radius, cw)
                 yaw_cmd = self.orbit_guidance(orbit_center, radius, 
                                               local_position, yaw, cw)
@@ -432,7 +453,7 @@ class LateralAutoPilot:
             else:
                 radius = 300
                 cw = False
-                orbit_center = np.array([600.0, -350.0, -450.0])
+                orbit_center = np.array([600.0, -380.0, -450.0])
                 roll_ff = self.coordinated_turn_ff(airspeed_cmd, radius, cw)
                 yaw_cmd = self.orbit_guidance(orbit_center, radius, 
                                               local_position, yaw, cw)
@@ -443,7 +464,7 @@ class LateralAutoPilot:
                 self.integrator_yaw = 0.0
             else:
                 roll_ff = 0.0
-                line_origin = np.array([600.0, -650.0, -450.0])
+                line_origin = np.array([600.0, -680.0, -450.0])
                 line_course = np.pi
                 yaw_cmd = self.straight_line_guidance(line_origin, line_course,
                                              local_position)

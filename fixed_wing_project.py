@@ -153,8 +153,8 @@ class FixedWingProject(Udaciplane):
                 (self.scenario == Scenario.ORBIT) |
                 (self.scenario == Scenario.LATERAL)):
             self.roll_cmd = self.lateral_autopilot.yaw_hold_loop(
-                    self.yaw_cmd, self.attitude[2], dt)
-            self.roll_cmd = self.roll_cmd + self.roll_ff
+                    self.yaw_cmd, self.attitude[2], dt, self.roll_ff)
+
             
         if((self.scenario == Scenario.ROLL) |
                 (self.scenario == Scenario.TURN) |
@@ -273,4 +273,4 @@ if __name__ == "__main__":
     #conn = WebSocketConnection('ws://127.0.0.1:5760')
     drone = FixedWingProject(conn)
     time.sleep(2)
-    drone.run_scenario(Scenario.LONGITUDINAL)
+    drone.run_scenario(Scenario.LATERAL)
