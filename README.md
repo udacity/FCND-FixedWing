@@ -356,27 +356,272 @@ The lateral/directional scenarios are designed to incrementally implement contro
 
 #### Scenario #6: Stabilized Roll Angle ####
 
-TBD
+![roll](Diagrams/roll_loop.png)
+
+The objective of this scenario is to tune/design a controller to maintain a constant roll angle using PD control as shown above. The aircraft will start at 45 degree roll angle and the controller should return the aircraft to wings level (0 degree roll). In this scenario roll angle and roll rate will be used to calculate a desired aileron command.
+
+To complete this scenario:
+
+- The roll angle must be within +/- 5 degrees within 5s
+- The roll angle must maintain within those bounds for 5 seconds
+
+This controller should be implemented in plane_control.py, by filling in the following functions:
+~~~py
+
+"""Used to calculate the commanded aileron based on the roll error
+    
+    Args:
+	    phi_cmd: commanded roll in radians
+    	phi: roll angle in radians
+    	roll_rate: in radians/sec
+    	T_s: timestep in sec
+
+	Returns:
+		aileron: in percent full aileron [-1,1]
+"""
+def roll_attitude_hold_loop(self,
+                            phi_cmd,  # commanded roll
+                            phi,    # actual roll 
+                            roll_rate, 
+                            T_s = 0.0):
+	aileron = 0
+	# STUDENT CODE HERE
+	return aileron
+~~~
+
+Tips:
+
+- Increase the proportional until you start seeing small oscillations near wings level. Add a derivative term to smooth the dynamic response
+- Due to the high drag of the wings, the derivative term may not be necessary to complete the objectives. The derivative term is required for a complete solution
+- The aircraft should be near symmetric, but if you are seeing a small steady state error near wings level, increase your proportional gain to decrease this error. Do not add an integral term!
+
 
 #### Scenario #7: Coordinated Turn ####
 
-TBD
+![turn](Diagrams/sideslip_hold.PNG)
 
-#### Scenario #8: Constant Course ####
+The objective of this scenario is to tune/design a controller to regulate the sideslip of the aircraft during a banked turn using PI control as shown above. The aircraft will be commanded to a 45 degree bank angle, which will cause the aircraft to sideslip. The coordinated turn assumptions used in the course hold assume that the turn is coordinated and the sideslip is near zero. The sideslip (approximated from the aircraft velocity and heading) will be used to calculate the rudder command. Ensure to implement anti-windup for the integrator.
 
-TBD
+To complete this scenario:
+
+- The sideslip must be within +/- 0.5 degrees within 25s
+- The airspeed must maintain the airspeed within those bounds for 5 seconds
+- The integrator uses a discrete integration technique. The timestep used in the Unity simulation is smaller than the python timestep, therefore you may experience integration issues when moving to the Python simulation. You may need to lower your dependence on the integral term when executing python control (smaller gain) or try a higher order integration method (trapezoidal instead of Euler).
+
+This controller should be implemented in plane_control.py, by filling in the following functions:
+
+~~~py
+
+"""Used to calculate the commanded rudder based on the sideslip
+
+    Args:
+        beta: sideslip angle in radians
+        T_s: timestep in sec
+        
+    Returns:
+        rudder: in percent full rudder [-1,1]
+"""
+def sideslip_hold_loop(self,
+                       beta, # sideslip angle 
+                       T_s):
+    rudder = 0
+    # STUDENT CODE HERE
+    return rudder
+~~~
+
+Tips:
+
+- Increase the proportional gain to meet the objectives. Increase the integral gain to remove any remaining steady state error.
+- You may not be able to drive the steady state error complete to zero, but the smaller it is, the easier the following scenarios will be.
+
+#### Scenario #8: Constant Course/Yaw Hold ####
+
+![course](Diagrams/course_hold.png)
+
+The objective of this scenario is to tune/design a controller to maintain a constant course/yaw angle using PI control as shown above. The target yaw is zero degrees; the aircraft will start with a 45 degree yaw. The current vehicle heading will be used to calculate a roll command. Ensure to implement anti-windup for the integrator. The commanded roll rate should be saturated between at a 60 degrees maximum. The feed-forward roll should be included in this solution. The feed-forward for this scenario but his term is used in the orbit scenario.
+
+To complete this scenario:
+
+- The yaw must be within +/- 5 degrees of the target course (0 degrees) within 10s
+- The airspeed must maintain the airspeed within those bounds for 5 seconds
+
+This controller should be implemented in plane_control.py, by filling in the following functions:
+
+~~~py
+
+"""Used to calculate the commanded roll angle from the course/yaw angle
+    Args:
+        yaw_cmd: commanded yaw in radians
+        yaw: roll angle in radians
+        roll_rate: in radians/sec
+        T_s: timestep in sec
+        roll_ff: feed-forward roll command (for orbit scenario)
+        
+    Returns:
+        roll_cmd: commanded roll in radians
+"""
+def yaw_hold_loop(self,
+                     yaw_cmd,  # desired heading
+                     yaw,     # actual heading 
+                     T_s,
+                     roll_ff=0):
+    roll_cmd = 0
+    # STUDENT CODE HERE
+    return roll_cmd
+
+~~~
+
+Tips:
+
+- Ensure the course error is appropriately between -PI and PI (i.e. a heading of 350 degrees should have 10 degrees of error, not -350!) 
+- Increase the proportional gain to have the dynamic response desired (speedy with little/no overshoot). Add a small integral gain to remove any steady state error.
+- Since there are no disturbances, an integral gain should not be required to complete this scenario but should be included in the final solution. The integral gain will also help complete the following scenarios.
+- The integrator uses a discrete integration technique. The timestep used in the Unity simulation is smaller than the python timestep, therefore you may experience integration issues when moving to the Python simulation. You may need to lower your dependence on the integral term when executing python control (smaller gain) or try a higher order integration method (trapezoidal instead of Euler).
 
 #### Scenario #9: Straight Line Following ####
 
-TBD
+The objective of this scenario is to tune/design a controller to track the aircraft to the desired line. The line will be defined as an origin point and course. You'll first calculate the crosstrack error from the line and use that to generate a commanded heading (based on an arctan based trajectory towards the line). The infite course approach angle used in the simulation is perpendicular to the line (PI/2), but feel free to play around with different values in your python implementation. The aircraft will start 20 meters to offset from the line.
 
+To complete this scenario:
+
+- The crosstrack error from the line must be within +/- 3 meters within 25s
+- The crosstrack error must maintain within those bounds for 5s
+
+This controller should be implemented in plane_control.py, by filling in the following functions:
+
+~~~py
+
+"""Used to calculate the desired course angle based on cross-track error
+    from a desired line
+
+    Args:
+        line_origin: point on the desired line in meters [N, E, D]
+        line_course: heading of the line in radians
+        local_position: vehicle position in meters [N, E, D]
+        
+    Returns:
+        course_cmd: course/yaw cmd for the vehicle in radians
+"""
+def straight_line_guidance(self, line_origin, line_course, 
+                           local_position):
+    course_cmd = 0
+    # STUDENT CODE HERE
+    return course_cmd
+
+~~~
+
+Tips:
+
+- Make sure to include the course of the line in your final course command. You will still be able to complete this scenario while forgetting it because the course command is 0 degrees, but it will hurt you in future scenarios.
+- When using the Unity simulation, a blue arrow is provided on the compass heading showing your desired heading angle. If that heading moves faster than the aircraft can change its heading, your line following gain may be too high. If aircraft heading oscillates around that value, you may need to return to the previous scenario and adjust your proportional yaw gain. If the aircraft heading lags behind the blue arrow, you may need to adjust your integral yaw gain in the previous scenario.
+- 
 #### Scenario #10: Orbit Following ####
+The objective of this scenario is to tune/design a controller to track the vehicle to a circular orbit. This controller requires two parts. The first generates a course command based on the current radius from the orbit origin and the aircraft heading. The second part calculates the feed-forward roll required for desired turning radius of the orbit (assuming a coordinate turn). Although this scenario is a clockwise orbit, the controller should be able to handle counter clockwise turns also. The aircraft will start with zero roll angle on the orbit. 
 
-TBD
+To complete this scenario:
+
+- The radius from the orbit center (North = 0 meters, East = 500 meters) must be within +/- 5 meters of the target radius (500 meters) within 15s
+- The radius from the orbit center must maintain within those bounds for 5 seconds
+
+This controller should be implemented in plane_control.py, by filling in the following functions:
+
+~~~py
+
+"""Used to calculate the desired course angle based on radius error from
+    a specified orbit center
+    
+    Args:
+        orbit_center: in meters [N, E, D]
+        orbit_radius: desired radius in meters
+        local_position: vehicle position in meters [N, E, D]
+        yaw: vehicle heading in radians
+        clockwise: specifies whether to fly clockwise (increasing yaw)
+        
+    Returns:
+        course_cmd: course/yaw cmd for the vehicle in radians
+"""
+def orbit_guidance(self, orbit_center, orbit_radius, local_position, yaw,
+                   clockwise = True):
+    course_cmd = 0
+    # STUDENT CODE HERE
+    return course_cmd
+    
+"""Used to calculate the feedforward roll angle for a constant radius
+    coordinated turn
+
+    Args:
+        speed: the aircraft speed during the turn in meters/sec
+        radius: turning radius in meters
+        cw: true=clockwise turn, false = counter-clockwise turn
+        
+    Returns:
+        roll_ff: feed-forward roll in radians
+"""
+def coordinated_turn_ff(self, speed, radius, cw):
+    roll_ff = 0
+    # STUDENT CODE HERE
+    return roll_ff
+    
+~~~
+
+Tips:
+
+- Increase the gain to ensure the course command guides the vehicle back to the orbit within the threshold
+- You will not be able to complete this scenario without including the feed-foward term in your course controller
+- When using the Unity simulation, a blue arrow is provided on the compass heading showing your desired heading angle. If that heading moves faster than the aircraft can change its heading, your line following gain may be too high. If aircraft heading oscillates around that value, you may need to return to the previous scenario and adjust your proportional yaw gain. If the aircraft heading lags behind the blue arrow, you may need to adjust your integral yaw gain in the previous scenario.
 
 ### Scenario #11: Lateral/Directional Challenge ###
 
-TBD
+The objective of this challenge is to successfully fly through a series of virtual gates in the sky. All the positions given in this scenario are relative to the vehicle start location.
+To do this, tune/implement a lateral state machine using the vehicle position and heading to generate a course command and feed-forward roll. Your state machine should include function calls to the straight_line_guidance, orbit_guidance, and coordinated_turn_ff functions:
+
+  The first leg (before Gate #1) should implement a line following controller between North =  0 meters, East = 20 meters and Gate #1.
+  The second leg (between Gate#1 and Gate #2) should implement an orbit following controller around the orbit center North = 500 meters, East = -380 meters (radius = 400 meters)
+  The third leg (between Gate #2 and Gate #3) should implement an orbit following controller around the orbit center North = 600 meters, East = -380 (radius = 300 meters)
+  The final leg (between Gate #3 and Gate #4) should implement a line following controller between the two gates.
+  
+To complete the challenge, you must be within +/-5 meter lateral distance when arriving at the gate.
+
+The gate locations:
+
+- Gate #1: North = 500m, East = 20m
+- Gate #2: North = 900m, East = -380m
+- Gate #3: North = 600m, East = -680m
+- Gate #4: North = 100m, East = -680m
+
+This controller should be implemented in plane_control.py, by filling in the following functions:
+
+~~~py
+
+"""Used to calculate the desired course angle and feed-forward roll
+    depending on which phase of lateral flight (orbit or line following) the 
+    aicraft is in
+
+    Args:
+        local_position: vehicle position in meters [N, E, D]
+        yaw: vehicle heading in radians
+        airspeed_cmd: in meters/sec
+        
+    Returns:
+        roll_ff: feed-forward roll in radians
+        yaw_cmd: commanded yaw/course in radians
+"""
+def path_manager(self, local_position, yaw, airspeed_cmd):
+    
+    roll_ff = 0
+    yaw_cmd = 0
+    # STUDENT CODE HERE
+    
+    return(roll_ff,yaw_cmd)
+
+~~~
+
+Tips:
+
+- If you see a slow response when going from line following to orbit follow (or vice versa), reset your integrators to 0 when transitioning to a new phase of flight.
+- If you having trouble with the last straight line leg, did you include the course command in your line following controller?
+- If you having trouble with the orbit segments, did you implement the changes necessary to do a counter clockwise orbit?
+- There are not any gains to tune for this scenario, so if the vehicle seems to be in the correct phase of flight, but you are still not hitting the gates, go back to previous scenarios to exceed the scenario requirements, not just meet minimum requirements.
 
 ### Scenario #12: Full 3D Challenge ###
 
@@ -384,7 +629,7 @@ TBD
 
 ## Evaluation ##
 
-The longitudinal, lateral/directional, and full 3D challenges will be evaluated for successful completion of the objectives. Success completion of the controller
+The longitudinal, lateral/directional, and full 3D challenges will be evaluated for successful completion of the objectives. Success implementation includes the control loops as described in the scenarios plus gains tuned to complete the three challenges.
 
 ### Inconsistent Results ###
 
