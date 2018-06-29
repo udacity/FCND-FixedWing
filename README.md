@@ -355,7 +355,9 @@ Tips:
 The lateral/directional scenarios are designed to incrementally implement control loops to command the aircrafts airspeed, pitch, and altitude using the elevator and the throttle. When running these scenarios from Python, a Unity based longitudinal controller will maintain altitude and airspeed.
 
 #### Scenario #6: Stabilized Roll Angle ####
+
 ![roll](Diagrams/roll_loop.png)
+
 The objective of this scenario is to tune/design a controller to maintain a constant roll angle using PD control as shown above. The aircraft will start at 45 degree roll angle and the controller should return the aircraft to wings level (0 degree roll). In this scenario roll angle and roll rate will be used to calculate a desired aileron command.
 
 To complete this scenario:
@@ -378,10 +380,10 @@ This controller should be implemented in plane_control.py, by filling in the fol
 		aileron: in percent full aileron [-1,1]
 """
 def roll_attitude_hold_loop(self,
-							phi_cmd,  # commanded roll
-							phi,    # actual roll 
-							roll_rate, 
-							T_s = 0.0):
+                            phi_cmd,  # commanded roll
+                            phi,    # actual roll 
+                            roll_rate, 
+                            T_s = 0.0):
 	aileron = 0
 	# STUDENT CODE HERE
 	return aileron
@@ -395,7 +397,8 @@ Tips:
 
 
 #### Scenario #7: Coordinated Turn ####
-![turn](Diagrams/sideslip_loop.png)
+
+![turn](Diagrams/sideslip_hold.PNG)
 
 The objective of this scenario is to tune/design a controller to regulate the sideslip of the aircraft during a banked turn using PI control as shown above. The aircraft will be commanded to a 45 degree bank angle, which will cause the aircraft to sideslip. The coordinated turn assumptions used in the course hold assume that the turn is coordinated and the sideslip is near zero. The sideslip (approximated from the aircraft velocity and heading) will be used to calculate the rudder command. Ensure to implement anti-windup for the integrator.
 
@@ -433,7 +436,7 @@ Tips:
 
 #### Scenario #8: Constant Course/Yaw Hold ####
 
-![course](Diagrams/sideslip_loop.png)
+![course](Diagrams/course_hold.png)
 
 The objective of this scenario is to tune/design a controller to maintain a constant course/yaw angle using PI control as shown above. The target yaw is zero degrees; the aircraft will start with a 45 degree yaw. The current vehicle heading will be used to calculate a roll command. Ensure to implement anti-windup for the integrator. The commanded roll rate should be saturated between at a 60 degrees maximum. The feed-forward roll should be included in this solution. The feed-forward for this scenario but his term is used in the orbit scenario.
 
