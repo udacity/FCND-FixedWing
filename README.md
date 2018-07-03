@@ -20,6 +20,10 @@ Regardless of your development platform, the first step is to download or clone 
 Next you'll need to get the latest version of [Udacidrone](https://udacity.github.io/udacidrone/docs/getting-started.html).
 If you've previously installed Udacidrone, ensure that you are working with version 0.3.2 or later.
 
+You can update Udacidrone by running the following from the command line:
+
+`pip install -U git+https://github.com/udacity/udacidrone.git`
+
 ### Unity Simulation ###
 
 Finally, download the version of the simulator that's appropriate for your operating system [from this repository](https://github.com/udacity/FCND-FixedWing/releases). (v0.1.2 or higher for longitudinal scenarios)
