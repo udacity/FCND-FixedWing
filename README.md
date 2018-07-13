@@ -689,7 +689,7 @@ The orbit centers and transition points from orbit->line
 
 A diagram of the whole route is shown below:
 
-![route](Diagrams/fw_challenge.PNG)
+![route](Diagrams/fw_challenge.png)
 
 
 
