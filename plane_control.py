@@ -37,8 +37,8 @@ class LongitudinalAutoPilot(object):
         # STUDENT CODE HERE
         
         # START SOLUTION
-        gain_p_pitch = 20.0
-        gain_p_q = 10.0
+        gain_p_pitch = 5.0
+        gain_p_q = 1.0
         elevator_cmd = gain_p_pitch*(pitch_cmd - pitch) - gain_p_q*pitch_rate
         # END SOLUTION
         return elevator_cmd
@@ -60,7 +60,7 @@ class LongitudinalAutoPilot(object):
         
         # START SOLUTION
         gain_p_alt = 0.03
-        gain_i_alt = 0.005
+        gain_i_alt = 0.01
        
         altitude_error = altitude_cmd-altitude
         self.alt_int = self.alt_int + altitude_error*dt
@@ -98,8 +98,8 @@ class LongitudinalAutoPilot(object):
         
         # START SOLUTION
         throttle_ff = 0.67
-        gain_p_speed = 0.2
-        gain_i_speed = 0.1
+        gain_p_speed = 0.5
+        gain_i_speed = 0.2
         speed_error = (airspeed_cmd-airspeed)
         self.speed_int = self.speed_int + speed_error*dt
         
@@ -134,7 +134,7 @@ class LongitudinalAutoPilot(object):
         
         # START SOLUTION
         gain_p_airspeed = -0.2
-        gain_i_airspeed = -0.1
+        gain_i_airspeed = -0.2
         
         airspeed_error = airspeed_cmd-airspeed
         self.climb_speed_int = self.climb_speed_int + airspeed_error*dt
@@ -197,6 +197,7 @@ class LateralAutoPilot:
         self.integrator_beta = 0.0
         self.gate = 1
         self.max_roll = 60*np.pi/180.0
+        self.state = 1
 
 
 
@@ -221,7 +222,7 @@ class LateralAutoPilot:
         
         
         # START SOLUION
-        gain_p_phi = 40.0
+        gain_p_phi = 10.0
         gain_d_phi = 1.0
         aileron = gain_p_phi*(phi_cmd-phi) - gain_d_phi*roll_rate
         # END SOLUTION
@@ -248,8 +249,8 @@ class LateralAutoPilot:
         # STUDENT CODE HERE
         
         # START SOLUTION
-        gain_p_yaw = 1.6
-        gain_i_yaw = 0.02
+        gain_p_yaw = 3
+        gain_i_yaw = 0.2
         yaw_error = yaw_cmd-yaw
         while(yaw_error < np.pi):
             yaw_error = yaw_error + 2*np.pi
@@ -293,7 +294,7 @@ class LateralAutoPilot:
         # STUDENT CODE HERE
         
         # START SOLUTION
-        gain_p_beta = -1.0
+        gain_p_beta = -2.0
         gain_i_beta = -1.0
         self.integrator_beta = self.integrator_beta+(0.0-beta)*T_s
         rudder_unsat = gain_p_beta*(0.0-beta)
@@ -476,6 +477,73 @@ class LateralAutoPilot:
             
         # END SOLUTION
         return(roll_ff,yaw_cmd)
+    
+    
+    """Used to calculate the desired course angle and feed-forward roll
+    depending on which phase of lateral flight (orbit or line following) the 
+    aicraft is in
+    
+        Args:
+            waypoint_tuple: 3 waypoints, (prev_waypoint, curr_waypoint, next_waypoint), waypoints are in meters [N, E, D]
+            local_position: vehicle position in meters [N, E, D]
+            yaw: vehicle heading in radians
+            airspeed_cmd: in meters/sec
+            
+        Returns:
+            roll_ff: feed-forward roll in radians
+            yaw_cmd: commanded yaw/course in radians
+            cycle: True=cycle waypoints (at the end of orbit segment)
+    """
+    def waypoint_follower(self, waypoint_tuple, local_position, yaw, airspeed_cmd):
+        roll_ff = 0.0
+        yaw_cmd = 0.0
+        cycle = False
+        
+        # STUDENT CODE HERE
+        
+        # BEGIN SOLUTION
+        radius = 500
+        
+        prev_waypoint = waypoint_tuple[0][0:2]
+        curr_waypoint = waypoint_tuple[1][0:2]
+        next_waypoint = waypoint_tuple[2][0:2]
+        q0 = (curr_waypoint-prev_waypoint)/np.linalg.norm(curr_waypoint-prev_waypoint)
+        q1 = (next_waypoint-curr_waypoint)/np.linalg.norm(next_waypoint-curr_waypoint)
+        angle = np.arccos(-np.dot(q0, q1))
+        
+        # Line following state
+        if self.state == 1:
+            q = q0
+            z = curr_waypoint - (radius/np.tan(angle/2))*q0
+            course = np.arctan2(q[1], q[0])
+            #xtrack_error = (z[1]-local_position[1])*np.cos(course)-(z[0]-local_position[0])*np.sin(course)
+            if np.dot(local_position-z,q) > 0:
+                self.state = 2
+                self.integrator_yaw = 0
+            else:
+                roll_ff = 0
+                line_origin = prev_waypoint
+                line_course = course
+                yaw_cmd = self.straight_line_guidance(line_origin, line_course,
+                                                      local_position)
+        elif self.state == 2:
+            c = curr_waypoint - (radius/np.sin(angle/2))*(q0-q1)/np.linalg.norm(q0-q1)
+            z = curr_waypoint + (radius/np.tan(angle/2))*q1
+            cw = np.sign(q0[0]*q1[1]-q0[1]*q1[0])
+            # Cycle waypoints
+            if np.dot(local_position-z,q1) > 0:
+                print('Center: ', c)
+                print('Transition: ', z)
+                self.state = 1
+                self.integrator_yaw = 0
+                cycle = True
+            else:
+                yaw_cmd = self.orbit_guidance(c,radius,local_position,yaw, cw>0)
+                roll_ff = self.coordinated_turn_ff(airspeed_cmd, radius, cw>0)
+               
+        # END SOLUTION
+        
+        return(roll_ff, yaw_cmd, cycle)
 
 
 

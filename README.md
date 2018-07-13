@@ -26,7 +26,9 @@ You can update Udacidrone by running the following from the command line:
 
 ### Unity Simulation ###
 
-Finally, download the version of the simulator that's appropriate for your operating system [from this repository](https://github.com/udacity/FCND-FixedWing/releases). (v0.1.2 or higher for longitudinal scenarios)
+Finally, download the version of the simulator that's appropriate for your operating system [from this repository](https://github.com/udacity/FCND-FixedWing/releases). (v0.1.2 or higher for longitudinal scenarios, v0.1.4 or higher for lateral scenarios)
+
+Note: you may need to pass an exception with antivirus to run the simulator
 
 ## Simulator Walkthrough ##
 
@@ -54,9 +56,6 @@ You have direct control over the throttle, ailerons, elevators, and rudder. Use 
 - Q/E: rudder control
 - W/S: elevator trim (incremental)
 
-#### Other Flight Modes ####
-
-TBD
 
 ### Scenario Selection ###
 
@@ -66,6 +65,14 @@ Click the scenario selection menu to see a drop-down list of possible scenarios.
 - Run Python code: a screen will appear waiting for Python controller to connect/arm. The screen will disappear and the scenario will start once the vehicle is armed from Python
 
 Most of the scenarios have a time limit associated with them. Upon completion (pass or fail) there will be a window showing your result. From there, you can select another scenario or continue retry the current scenario.
+
+When running a scenario, there is additional information displayed specific to the scenario as shown below:
+
+![eval](Diagrams/eval.png)
+
+The value of the four primary control surfaces are shown for all scenarios. Throttle is displayed as a percentage of maximum throttle. Elevator, rudder, and aileron are displayed as a value between -1 and 1 correspond to minimum and maximum control deflections, respectively. 
+
+The scenario may also display 1 or 2 parameters which are being used to evaluate success for the scenario. The bar will be green if the parameter is within the acceptable threshold and red otherwise. A few scenarios may include parameters that aren't used to determine success (i.e. pitch angle in the altitude hold scenario). The bar for these parameters will always be red.
 
 ### Tuning Unity Parameters
 
@@ -98,36 +105,27 @@ The simulation can also be controlled using a Python script and the Udacidrone A
 ### Running a scenario ###
 To run a scenario from Python:
 1. Select the scenario within the Unity simulation
-2. Select the "Run From Python" button, you should see a "Waiting for Python" message
+2. Select the "Run Python Code" button, you should see a "Waiting for Python" message
 3. Change fixed_wing_project.py to execute the same scenario (see below)
-3. Execute fixed_wing_project.py and the scenario should start autonomatically:
+3. Execute fixed_wing_project.py using the appropriately numbered scenario and the scenario should start autonomatically:
 
 ~~~
-python fixed_wing_project.py
+python fixed_wing_project.py -[scenario#]
+~~~
+
+For example, the following will execute the altitude hold scenario:
+
+~~~
+python fixed_wing_project.py -2
 ~~~
 
 If fixed_wing_project.py is run before being prompted onscreen in the Unity simulation, the python code will be unable to connect.
 
-TODO: This needs to be easier to execute for the students possible with a command line argument
-To select a different scenario, you need to change the last line of fixed_wing_project.py prior to executing it. For example the following will run the Trim scenario
-
-~~~
-drone.run_scenario(Scenario.TRIM)
-~~~
-
-The following are valid scenario names:
-* Scenario.SANDBOX
-* Scenario.TRIM
-* Scenario.AIRSPEED
-* Scenario.ALTITUDE
-* Scenario.CLIMB
-* Scenario.LONGITUDINAL
-* Scenario.ROLL
-* Scenario.TURN
-* Scenario.YAW
-* Scenario.LINE
-* Scenario.ORBIT
-* Scenario.LATERAL 
+Note: there is a known bug where the python may not connect and get stalled trying to connect (usually after a scenario has already been run). If this happens:
+- No need to stop your python script, leave it running
+- Click cancel on the "Waiting for Python" window
+- Click "Run Python Code"
+- The python script should now successfully connect!
 
 
 ## The Scenarios ##
@@ -508,6 +506,7 @@ This controller should be implemented in plane_control.py, by filling in the fol
 """
 def straight_line_guidance(self, line_origin, line_course, 
                            local_position):
+                           
     course_cmd = 0
     # STUDENT CODE HERE
     return course_cmd
@@ -518,8 +517,9 @@ Tips:
 
 - Make sure to include the course of the line in your final course command. You will still be able to complete this scenario while forgetting it because the course command is 0 degrees, but it will hurt you in future scenarios.
 - When using the Unity simulation, a blue arrow is provided on the compass heading showing your desired heading angle. If that heading moves faster than the aircraft can change its heading, your line following gain may be too high. If aircraft heading oscillates around that value, you may need to return to the previous scenario and adjust your proportional yaw gain. If the aircraft heading lags behind the blue arrow, you may need to adjust your integral yaw gain in the previous scenario.
-- 
+ 
 #### Scenario #10: Orbit Following ####
+
 The objective of this scenario is to tune/design a controller to track the vehicle to a circular orbit. This controller requires two parts. The first generates a course command based on the current radius from the orbit origin and the aircraft heading. The second part calculates the feed-forward roll required for desired turning radius of the orbit (assuming a coordinate turn). Although this scenario is a clockwise orbit, the controller should be able to handle counter clockwise turns also. The aircraft will start with zero roll angle on the orbit. 
 
 To complete this scenario:
@@ -546,6 +546,7 @@ This controller should be implemented in plane_control.py, by filling in the fol
 """
 def orbit_guidance(self, orbit_center, orbit_radius, local_position, yaw,
                    clockwise = True):
+
     course_cmd = 0
     # STUDENT CODE HERE
     return course_cmd
@@ -562,6 +563,7 @@ def orbit_guidance(self, orbit_center, orbit_radius, local_position, yaw,
         roll_ff: feed-forward roll in radians
 """
 def coordinated_turn_ff(self, speed, radius, cw):
+
     roll_ff = 0
     # STUDENT CODE HERE
     return roll_ff
@@ -629,11 +631,80 @@ Tips:
 
 ### Scenario #12: Full 3D Challenge ###
 
-TBD
+This challenge is meant to test your longitudinal and lateral controllers working together. Your goal is to control the aircraft between a series of waypoints. In between waypoints, you'll controll the aircraft using a line-following controller. To transition between segments, you'll use an orbit following controller with a 500 meter radius.
+
+To complete this challenge, you'll implement your controller to hit the target gates within the error threshold (5m). Each of the gates are positioned where the aircraft should transition between segments (using a 500m radius orbit)
+
+The waypoint locations (N/E or relative to the vehicle start location, D is the absolute down value):
+- Waypoint #1: N=0m, E=500m, D=-400m
+- Waypoint #2: N-2600m, E=500m, D=-500m
+- Waypoint #3: N=2600m, E=-2500m, D=-400m
+- Waypoint #4: N=100m, E=500m, D=-450m
+- Waypoint #5: N=100m, E=-2000m, D=-450m
+
+This controller should be implemented in plane_control.py, by filling in the following function:
+
+~~~py
+
+"""Used to calculate the desired course angle and feed-forward roll
+    depending on which phase of lateral flight (orbit or line following) the 
+    aicraft is in
+
+    Args:
+        waypoint_tuple: 3 waypoints, (prev_waypoint, curr_waypoint, next_waypoint), waypoints are in meters [N, E, D]
+        local_position: vehicle position in meters [N, E, D]
+        yaw: vehicle heading in radians
+        airspeed_cmd: in meters/sec
+
+    Returns:
+        roll_ff: feed-forward roll in radians
+        yaw_cmd: commanded yaw/course in radians
+        cycle: True=cycle waypoints (at the end of orbit segment)
+"""
+def waypoint_follower(self, waypoint_tuple, local_position, yaw, airspeed_cmd):
+    
+    roll_ff = 0.0
+    yaw_cmd = 0.0
+    cycle = False
+    
+    # STUDENT CODE HERE
+    
+    return (roll_ff, yaw_cmd, cycle)
+
+~~~
+
+The waypoint follower can be implemented as a state machine: either the vehicle is line following or orbit following. The transition between the two controllers is set based on where a 500m radius circle is both tangent to the current leg (prev_waypoint->curr_waypoint) and the next leg (curr_waypoint->next_waypoint):
+
+- When the aircraft crosses a hyper plane defined by a line perpendicular to the current leg going through the first tangent point, transition from line following to orbit following. The first tangent point is location of the gates. The location of the gates is given below.
+- When the aircraft crosses a hyper plane defined by a line perpendicular to the next leg going through the second tangent point, transition from orbit following to line following and cycle the waypoints. To help in calculating these points, the orbit centers and the second tangent points are given below.
+
+The longitudinal controller will use the state machine you implemented in the Longitudinal Challenge scenario.
+
+The gate positions (N/E relative to aircraft start position, D is absolute down):
+- Gate #1: N=2100m, E=500m, D=-450m
+- Gate #2: N=2600m, E=-1119m, D=-500m
+- Gate #3: N=984m, E=-560m, D=-400m
+- Gate #4: N=100m, E=-200m, D=-450m
+
+The orbit centers and transition points from orbit->line
+- Center #1: N=2100m, E=0m
+- Transition: N=2600m, E=0m
+
+- Center #2: N=2100m, E=-1119m
+- Transition: N=1715m, E=-1439m
+
+- Center #3: N=600m, E=-881m
+- Transition: N=100m, E=-881m
+
+A diagram of the whole route is shown below:
+
+![route](Diagrams/fw_challenge.png)
+
+
 
 ## Evaluation ##
 
-The longitudinal, lateral/directional, and full 3D challenges will be evaluated for successful completion of the objectives. Success implementation includes the control loops as described in the scenarios plus gains tuned to complete the three challenges.
+This project does not require a submission and is not evaluated.
 
 ### Inconsistent Results ###
 
