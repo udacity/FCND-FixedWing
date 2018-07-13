@@ -52,9 +52,6 @@ You have direct control over the throttle, ailerons, elevators, and rudder. Use 
 - Q/E: rudder control
 - W/S: elevator trim (incremental)
 
-#### Other Flight Modes ####
-
-TBD
 
 ### Scenario Selection ###
 
@@ -64,6 +61,14 @@ Click the scenario selection menu to see a drop-down list of possible scenarios.
 - Run Python code: a screen will appear waiting for Python controller to connect/arm. The screen will disappear and the scenario will start once the vehicle is armed from Python
 
 Most of the scenarios have a time limit associated with them. Upon completion (pass or fail) there will be a window showing your result. From there, you can select another scenario or continue retry the current scenario.
+
+When running a scenario, there is additional information display specific to the scenario as shown below:
+
+![eval](Diagrams/eval.png)
+
+The value of the four primary control surfaces are shown for all scenarios. Throttle is displayed as a percentage of maximum throttle. Elevator, rudder, and aileron are display as a value between -1 and 1 correspond to minimum and maximum control deflections, respectively. 
+
+The scenario may also display 1 or 2 parameters which are being used to evaluate success for the scenario. The bar will be green if the parameter is within the acceptable threshold and red otherwise. A few scenarios may include parameters that aren't used to determine success (i.e. pitch angle in the altitude hold scenario). These bar for these parameters will always be red.
 
 ### Tuning Unity Parameters
 
