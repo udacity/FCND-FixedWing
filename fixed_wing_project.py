@@ -86,6 +86,11 @@ class FixedWingProject(Udaciplane):
         self._scenario_started = False
         
     def state_callback(self):
+        if(self.scenario == Scenario.SANDBOX):
+            if(self.status != 0):
+                self.scenario = Scenario(self.status)
+                self.init_scenario()
+        
         if(self.scenario != Scenario.SANDBOX):
             if(self._scenario_started == False):
                 self.take_control()
@@ -247,55 +252,65 @@ class FixedWingProject(Udaciplane):
                     print('Adding waypoint: ', next_waypoint)
                 self.waypoint_tuple = (self.waypoint_tuple[1], self.waypoint_tuple[2], next_waypoint)
                 self.altitude_cmd = -self.waypoint_tuple[0][2]
-            
-    
-    def run_scenario(self,scenario):
-        self.scenario = scenario
-        
-        if(scenario == Scenario.ALTITUDE):
+
+    def init_scenario(self):
+        if(self.scenario == Scenario.SANDBOX):
+            pass
+        elif(self.scenario == Scenario.ALTITUDE):
+            print('Starting Altitude Hold Scenario')
             self.throttle_cmd = 0.66
             self.altitude_cmd = 450.0
-        elif(scenario == Scenario.AIRSPEED):
+        elif(self.scenario == Scenario.AIRSPEED):
+            print('Starting Airspeed Hold Scenario')
             self.elevator_cmd = 0.0
             self.airspeed_cmd = 41.0
-        elif(scenario == Scenario.CLIMB):
+        elif(self.scenario == Scenario.CLIMB):
+            print('Starting Climb Scenario')
             self.airspeed_cmd = 41.0
             self.throttle_cmd = 1.0
-        elif(scenario == Scenario.LONGITUDINAL):
+        elif(self.scenario == Scenario.LONGITUDINAL):
+            print('Starting Longitudinal Challenge')
             self.airspeed_cmd = 41.0
             self.gate_target = self.longitudinal_gates.pop(0)
             self.altitude_cmd = self.gate_target[1]
-        elif(scenario == Scenario.ROLL):
+        elif(self.scenario == Scenario.ROLL):
+            print('Starting Stabilize Roll Scenario')
             self.airspeed_cmd = 41.0
             self.altitude_cmd = 450.0
             self.roll_cmd = 0.0  
             self.rudder_cmd = 0.0
-        elif(scenario == Scenario.TURN):
+        elif(self.scenario == Scenario.TURN):
+            print('Starting Coordinated Turn Scenario')
             self.airpseed_cmd = 41.0
             self.altitude_cmd = 450.0
             self.roll_cmd = 45.0*np.pi/180.0
             self.sideslip_cmd = 0.0
-        elif(scenario == Scenario.YAW):
+        elif(self.scenario == Scenario.YAW):
+            print('Starting Yaw Hold Scenario')
             self.airspeed_cmd = 41.0
             self.altitude_cmd = 450.0
             self.yaw_cmd = 0.0;
             self.sideslip_cmd = 0.0
             self.roll_ff = 0.0
-        elif(scenario == Scenario.LINE):
+        elif(self.scenario == Scenario.LINE):
+            print('Starting Line Following Scenario')
             self.airspeed_cmd = 41.0
             self.altitude_cmd = 450.0
             self.line_course = 0.0
             self.line_origin = np.array([0.0, 20.0, 450.0])
-        elif(scenario == Scenario.ORBIT):
+        elif(self.scenario == Scenario.ORBIT):
+            print('Starting Orbit Following Scenario')
             self.airspeed_cmd = 41.0
             self.altitude_cmd = 450.0
             self.orbit_radius = 500.0
             self.orbit_center = np.array([0.0, 500.0, -450.0])
             self.orbit_cw = True
-        elif(scenario == Scenario.LATERAL):
+        elif(self.scenario == Scenario.LATERAL):
+            print('Starting Lateral Challenge')
             self.airspeed_cmd = 41.0
             self.altitude_cmd = 450.0
-        elif(scenario == Scenario.FIXEDWING):
+        elif(self.scenario == Scenario.FIXEDWING):
+            print('Starting Fixed Wing Challenge')
             self.airspeed_cmd = 41.0
             prev_waypoint = self.waypoints.pop(0)
             curr_waypoint = self.waypoints.pop(0)
@@ -305,11 +320,11 @@ class FixedWingProject(Udaciplane):
         else:
             print('Invalid Scenario')
             return
+    
+    def run_scenario(self,scenario):
+        self.scenario = scenario
         
-        
-        #self.take_control()
-        
-        #self.arm()
+        self.init_scenario()
         
         self.start()
             
@@ -328,6 +343,6 @@ if __name__ == "__main__":
         except:
             print('Scenario argument must be a number')
     else:
-        drone.run_scenario(Scenario.ROLL)
+        scenario = 0
     
     drone.run_scenario(Scenario(scenario))
