@@ -106,7 +106,6 @@ The simulation can also be controlled using a Python script and the Udacidrone A
 To run a scenario from Python:
 1. Select the scenario within the Unity simulation
 2. Select the "Run Python Code" button, you should see a "Waiting for Python" message
-3. Change fixed_wing_project.py to execute the same scenario (see below)
 3. Execute fixed_wing_project.py using the appropriately numbered scenario and the scenario should start autonomatically:
 
 ~~~
@@ -117,6 +116,16 @@ For example, the following will execute the altitude hold scenario:
 
 ~~~
 python fixed_wing_project.py -2
+~~~
+
+OR
+
+3. With Udacidrone (v0.3.3 or later), the Unity simulator will automatically notify Python of the scenario number being run. Execute fixed_wing_project.py without a scenario number to automatically execute this scenario:
+
+~~~py
+
+# Automatically detects which scenario the Unity simulation is executing
+python fixed_wing_project.py
 ~~~
 
 If fixed_wing_project.py is run before being prompted onscreen in the Unity simulation, the python code will be unable to connect.
