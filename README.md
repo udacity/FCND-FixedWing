@@ -76,7 +76,7 @@ The scenario may also display 1 or 2 parameters which are being used to evaluate
 
 ### Tuning Unity Parameters
 
-The gains of the control system used internally on the Unity simulation can be tuned. The longitudinal and lateral control gains are tuned independently but the control gains within each type build upon each other (i.e. you cannot tune the other loop without first tuning the inner loop gains). To tune the gains:
+The gains of the control system used internally on the Unity simulation can be tuned. The longitudinal and lateral control gains are tuned independently but the control gains within each type build upon each other (i.e. you cannot tune the outer loop without first tuning the inner loop gains). To tune the gains:
 
 1. Default gains are loaded from the text file, gains.txt. The file will be located in the same folder as the simulation executable. Set the values prior to running th program.
 2. Choose the appropriate scenario from the scenario selection menu
