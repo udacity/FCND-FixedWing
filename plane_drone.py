@@ -18,7 +18,6 @@ class PlaneMode(Enum):
     SUB_MODE_LONGITUDE = 2
     SUB_MODE_LATERAL = 3
     SUB_MODE_STABILIZED = 4
-    SUB_MODE_ASCENDDESCEND = 5
 
 class Udaciplane(Drone):
     """
@@ -124,32 +123,47 @@ class Udaciplane(Drone):
         
     
     def cmd_controls(self, aileron, elevator, rudder, throttle):
-        self.connection.set_sub_mode(PlaneMode.SUB_MODE_MANUAL.value)
-        self.connection.cmd_moment(aileron, elevator, rudder, throttle)
-    
-    def cmd_ascenddescend(self, roll, airspeed, sideslip, throttle):
-        self.connection.set_sub_mode(PlaneMode.SUB_MODE_ASCENDDESCEND.value)
-        self.connection.cmd_moment(roll, airspeed, sideslip, throttle)
-
-    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
-        """Command the drone moments.
-
+        """Command the manual aircraft controls
+        
         Args:
-            roll_moment: in Newton*meter
-            pitch_moment: in Newton*meter
-            yaw_moment: in Newton*meter
-            thrust: upward force in Newtons
+            aileron: in percentage of maximum aileron (-1:1)
+            rudder: in percentage of maximum rudder (-1:1)
+            elevator: in percentage of maximum elevator (-1:1)
+            throttle: in percentage of maximum throttle RPM (0:1)
         """
-        try:
-            self.connection.cmd_moment(roll_moment, pitch_moment, yaw_moment, thrust)
-        except Exception as e:
-            # traceback.print_exc()
-            pass
-        
-        
-        
-        
+        self.connection.set_sub_mode(PlaneMode.SUB_MODE_MANUAL.value)
+        controls = [aileron, elevator, rudder, throttle]
+        self.connection.cmd_controls(controls)
     
+    def cmd_hybrid(self, aileron, elevator, rudder, throttle, roll_moment, pitch_moment, yaw_moment, thrust):
+        """Command the manual aircraft controls, the VTOL moments and total thrust force
+        
+        Args:
+            aileron: in percentage of maximum aileron (-1:1)
+            rudder: in percentage of maximum rudder (-1:1)
+            elevator: in percentage of maximum elevator (-1:1)
+            throttle: in percentage of maximum throttle RPM (0:1)
+            roll_moment: in percentage of maximum roll moment (-1:1)
+            pitch_moment: in percentage of maximum pitch moment (-1:1)
+            yaw_moment: in percentage of maximum yaw_moment (-1:1)
+            thrust: in percentage of maximum thrust (0:1)
+        """
+        self.connection.set_sub_mode(PlaneMode.SUB_MODE_MANUAL.value)
+        controls = [aileron, elevator, rudder, throttle, roll_moment, pitch_moment, yaw_moment , thrust]
+        self.connection.cmd_controls(controls)
+    
+    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
+        """Command the VTOL moments and total thrust force
+        
+        Args:
+            roll_moment: in percentage of maximum roll moment (-1:1)
+            pitch_moment: in percentage of maximum pitch moment (-1:1)
+            yaw_moment: in percentage of maximum yaw_moment (-1:1)
+            thrust: in percentage of maximum thrust (0:1)
+        """
+        self.connection.set_sub_mode(PlaneMode.SUB_MODE_MANUAL.value)
+        controls = [0.0, 0.0, 0.0, 0.0, roll_moment, pitch_moment, yaw_moment, thrust]
+        self.connection.cmd_controls(controls)    
         
     @property
     def local_position_target(self):
