@@ -763,7 +763,7 @@ You will need to implement your own VTOL controller. You will also need to integ
 
 Notes:
 - This scenario will run indefinitely
-- There are no parameters to tune, selecting "Tune Parameters" will allow instead allow you to control the aircraft manually 
+- There are no parameters to tune, selecting "Tune Parameters" will allow instead allow you to control the aircraft manually (after clicking to the Guided button to disengage Guided mode)
 - There are currently not success/failure criterion to allow you to control the aircraft back and forth between the two landing pad locations
 - The control structure is completely opened ended for this challenge.
 
