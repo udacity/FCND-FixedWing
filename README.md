@@ -18,7 +18,7 @@ Regardless of your development platform, the first step is to download or clone 
 ### Udacidrone ###
 
 Next you'll need to get the latest version of [Udacidrone](https://udacity.github.io/udacidrone/docs/getting-started.html).
-If you've previously installed Udacidrone, ensure that you are working with version 0.3.3 or later.
+If you've previously installed Udacidrone, ensure that you are working with version 0.3.4 or later.
 
 You can update Udacidrone by running the following from the command line:
 
@@ -755,6 +755,26 @@ def cmd_controls(self, aileron, elevator, rudder, throttle):
         elevator: in percentage of maximum elevator (-1:1)
         throttle: in percentage of maximum throttle RPM (0:1)
     """
+    
+def cmd_vtol_position(self, north, east, altitude, heading):
+    """Command the local position and drone heading.
+
+    Args:
+        north: local north in meters
+        east: local east in meters
+        altitude: altitude above ground in meters
+        heading: drone yaw in radians
+    """
+    
+def cmd_vtol_attitude(self,roll, pitch, yaw_rate, vert_vel):
+    """Command the drone through attitude command
+
+    Args:
+        roll: in radians
+        pitch: in randians
+        yaw_rate: in radians/second
+        vert_vel: upward velocity in meters/second
+    """
 
 ~~~
 
@@ -766,6 +786,7 @@ Notes:
 - There are no parameters to tune, selecting "Tune Parameters" will allow instead allow you to control the aircraft manually (after clicking to the Guided button to disengage Guided mode)
 - There are currently not success/failure criterion to allow you to control the aircraft back and forth between the two landing pad locations
 - The control structure is completely opened ended for this challenge.
+- A simplified energy percentage was added to give a metric to compare against. It is only based on time the VTOL and aircraft throttle is being used. The VTOL controls drain the energy 8x's faster than the aircraft throttle as to incentive time spent in the fixed wing mode.
 
 Additional Manual Flight Controls:
 
@@ -783,7 +804,7 @@ Left/Right or A/D: Roll command (max roll = 60 degrees)
 c/space: Airspeed command increase decrease
 Q/E: Sideslip command
 
-To transition between Fixed Wing and VTOL press 't'. The aircraft will stabilize to a 0 roll/pitch using the VTOL rotors and zero throttle. At an airspeed of 10 m/s the flying car will transition to Position Hold VTOL Mode.
+To transition between Fixed Wing and VTOL press 't'. The aircraft will stabilize to a 0 roll/pitch using the aileron/elevator and zero throttle. At an airspeed of 10 m/s the flying car will transition to Position Hold VTOL Mode.
 
 ## Evaluation ##
 
