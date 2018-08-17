@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import numpy as np
 PI = 3.14159
@@ -36,6 +37,7 @@ class LongitudinalAutoPilot(object):
         elevator_cmd = 0.0
         # STUDENT CODE HERE
         
+        
         return elevator_cmd
     
     """Used to calculate the pitch command required to maintain the commanded
@@ -52,7 +54,9 @@ class LongitudinalAutoPilot(object):
     def altitude_loop(self, altitude, altitude_cmd, dt):
         pitch_cmd = 0.0
         # STUDENT CODE HERE
-                
+        
+        
+        
         return pitch_cmd
     
 
@@ -147,7 +151,8 @@ class LateralAutoPilot:
         aileron = 0
         # STUDENT CODE HERE
         
-
+        
+        
         return aileron
 
     """Used to calculate the commanded roll angle from the course/yaw angle

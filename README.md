@@ -18,7 +18,7 @@ Regardless of your development platform, the first step is to download or clone 
 ### Udacidrone ###
 
 Next you'll need to get the latest version of [Udacidrone](https://udacity.github.io/udacidrone/docs/getting-started.html).
-If you've previously installed Udacidrone, ensure that you are working with version 0.3.3 or later.
+If you've previously installed Udacidrone, ensure that you are working with version 0.3.4 or later.
 
 You can update Udacidrone by running the following from the command line:
 
@@ -709,7 +709,102 @@ A diagram of the whole route is shown below:
 
 ![route](Diagrams/fw_challenge.png)
 
+### Scenario #13: Flying Car Challenge ###
 
+The goal of this challenge is to take off in VTOL mode from a starting landing pad, transition to fixed wing mode to fly over the terrain, and transition back to VTOL mode to land on the other landing pad.
+Other Landing Pad Location (Relative to starting pad location):
+
+North: 1545m
+East: -1816m
+Down: -80m
+
+To accomplish this task, several other modes of control are available in the UdaciPlane class (you'll need Udacidrone v0.3.4 or later):
+
+~~~py
+
+def cmd_hybrid(self, aileron, elevator, rudder, throttle, roll_moment, pitch_moment, yaw_moment, thrust):
+    """Command the manual aircraft controls, the VTOL moments and total thrust force
+        
+    Args:
+        aileron: in percentage of maximum aileron (-1:1)
+        rudder: in percentage of maximum rudder (-1:1)
+        elevator: in percentage of maximum elevator (-1:1)
+        throttle: in percentage of maximum throttle RPM (0:1)
+        roll_moment: in percentage of maximum roll moment (-1:1)
+        pitch_moment: in percentage of maximum pitch moment (-1:1)
+        yaw_moment: in percentage of maximum yaw_moment (-1:1)
+        thrust: in percentage of maximum thrust (0:1)
+    """
+        
+def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
+    """Command the VTOL moments and total thrust force
+        
+    Args:
+        roll_moment: in percentage of maximum roll moment (-1:1)
+        pitch_moment: in percentage of maximum pitch moment (-1:1)
+        yaw_moment: in percentage of maximum yaw_moment (-1:1)
+        thrust: in percentage of maximum thrust (0:1)
+    """
+    
+def cmd_controls(self, aileron, elevator, rudder, throttle):
+    """Command the manual aircraft controls
+
+    Args:
+        aileron: in percentage of maximum aileron (-1:1)
+        rudder: in percentage of maximum rudder (-1:1)
+        elevator: in percentage of maximum elevator (-1:1)
+        throttle: in percentage of maximum throttle RPM (0:1)
+    """
+    
+def cmd_vtol_position(self, north, east, altitude, heading):
+    """Command the local position and drone heading.
+
+    Args:
+        north: local north in meters
+        east: local east in meters
+        altitude: altitude above ground in meters
+        heading: drone yaw in radians
+    """
+    
+def cmd_vtol_attitude(self,roll, pitch, yaw_rate, vert_vel):
+    """Command the drone through attitude command
+
+    Args:
+        roll: in radians
+        pitch: in randians
+        yaw_rate: in radians/second
+        vert_vel: upward velocity in meters/second
+    """
+
+~~~
+
+You will need to implement your own VTOL controller. You will also need to integrate the control commands into the FixedWingProject under the FLYINGCAR scenario. See the other scenarios in FixedWingProject for examples of how to integrate it into the project.
+        
+
+Notes:
+- This scenario will run indefinitely
+- There are no parameters to tune, selecting "Tune Parameters" will allow instead allow you to control the aircraft manually (after clicking to the Guided button to disengage Guided mode)
+- There are currently not success/failure criterion to allow you to control the aircraft back and forth between the two landing pad locations
+- The control structure is completely opened ended for this challenge.
+- A simplified energy percentage was added to give a metric to compare against. It is only based on time the VTOL and aircraft throttle is being used. The VTOL controls drain the energy 8x's faster than the aircraft throttle as to incentive time spent in the fixed wing mode.
+
+Additional Manual Flight Controls:
+
+When in Position Hold VTOL Mode:
+Up/Down or W/S: Command forward velocity
+Left/Right or A/D: Command sideways velocity
+c/space: Command velocity upwards
+Q/E: Command yaw rate
+
+To transition between VTOL and Fixed Wing press 't'. The aircraft will stabilize to a 0 roll/pitch using the VTOL rotors and run full throttle. At an airspeed of 30 m/s the flying car will transition to Fixed Wing Stabilized Mode.
+
+In Fixed Wing Stabilized Mode:
+Up/Down or W/S: Altitude hold command increase/decrease
+Left/Right or A/D: Roll command (max roll = 60 degrees)
+c/space: Airspeed command increase decrease
+Q/E: Sideslip command
+
+To transition between Fixed Wing and VTOL press 't'. The aircraft will stabilize to a 0 roll/pitch using the aileron/elevator and zero throttle. At an airspeed of 10 m/s the flying car will transition to Position Hold VTOL Mode.
 
 ## Evaluation ##
 

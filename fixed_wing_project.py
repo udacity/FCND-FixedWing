@@ -25,6 +25,7 @@ class Scenario(Enum):
     ORBIT = 10
     LATERAL = 11
     FIXEDWING = 12
+    FLYINGCAR = 13
 
 class FixedWingProject(Udaciplane):
         
@@ -150,6 +151,10 @@ class FixedWingProject(Udaciplane):
                 (self.scenario == Scenario.FIXEDWING)):
             self.rudder_cmd = self.lateral_autopilot.sideslip_hold_loop(
                     self.sideslip, dt)
+        
+        if(self.scenario == Scenario.FLYINGCAR):
+            # TODO: Insert Flying Car Scenario code here
+            pass
     
     def attitude_callback(self):
         dt = 0.0
@@ -197,7 +202,9 @@ class FixedWingProject(Udaciplane):
                                 self.attitude[1], self.gyro_raw[1], self.pitch_cmd)
             self.cmd_controls(self.aileron_cmd, self.elevator_cmd, self.rudder_cmd, self.throttle_cmd)
             
-            
+        if(self.scenario == Scenario.FLYINGCAR):
+            # TODO: Insert Flying Car Scenario code here
+            pass
     
     def local_position_callback(self):
         dt = 0.0
@@ -241,6 +248,7 @@ class FixedWingProject(Udaciplane):
             (self.roll_ff, self.yaw_cmd) = self.lateral_autopilot.path_manager(
                     self.local_position, self.attitude[2], self.airspeed_cmd)
             
+            
         if(self.scenario == Scenario.FIXEDWING):
             (self.roll_ff, self.yaw_cmd, switch) = self.lateral_autopilot.waypoint_follower(
                     self.waypoint_tuple, self.local_position[0:2], self.attitude[2], self.airspeed_cmd)
@@ -252,6 +260,10 @@ class FixedWingProject(Udaciplane):
                     print('Adding waypoint: ', next_waypoint)
                 self.waypoint_tuple = (self.waypoint_tuple[1], self.waypoint_tuple[2], next_waypoint)
                 self.altitude_cmd = -self.waypoint_tuple[0][2]
+        
+        if(self.scenario == Scenario.FLYINGCAR):
+            # TODO: Insert Flying Car Scenario code here
+            pass
 
     def init_scenario(self):
         if(self.scenario == Scenario.SANDBOX):
@@ -317,6 +329,9 @@ class FixedWingProject(Udaciplane):
             next_waypoint = self.waypoints.pop(0)
             self.waypoint_tuple = (prev_waypoint, curr_waypoint, next_waypoint)
             self.altitude_cmd = -self.waypoint_tuple[0][2]
+        elif(self.scenario == Scenario.FLYINGCAR):
+            # TODO: Insert Flying Car Scenario code here
+            pass
         else:
             print('Invalid Scenario')
             return
@@ -344,5 +359,5 @@ if __name__ == "__main__":
             print('Scenario argument must be a number')
     else:
         scenario = 0
-    
+
     drone.run_scenario(Scenario(scenario))
